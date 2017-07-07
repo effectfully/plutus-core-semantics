@@ -709,4 +709,6 @@
     (case [Prelude.evalMASTPath path]
       (cl Prelude.False () (con Prelude.False))
       (cl Prelude.True () (builtin equalsByteString hash [Prelude.hashMASTPath path]))))))
+
+  (define result [Prelude.fst (con Prelude.MkPair 10 20)])
 )
