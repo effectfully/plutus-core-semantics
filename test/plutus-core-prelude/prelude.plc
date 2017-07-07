@@ -395,13 +395,13 @@
   (lam xs [Prelude.foldl (lam x y (builtin addInt x y)) 0 xs]))
 
 (define sumFloat
-  (lam xs [Prelude.foldl (lam x y (builtin addFloat x y)) 0.0 xs]))
+  (lam xs [Prelude.foldl (lam x y (builtin addFloat x y)) 0 xs]))
 
 (define productInt
   (lam xs [Prelude.foldl (lam x y (builtin multiplyInt x y)) 1 xs]))
 
 (define productFloat
-  (lam xs [Prelude.foldl (lam x y (builtin multiplyFloat x y)) 1.0 xs]))
+  (lam xs [Prelude.foldl (lam x y (builtin multiplyFloat x y)) 1 xs]))
 
 (define maximumBy
   (lam comp
