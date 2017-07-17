@@ -29,3 +29,9 @@ done;
 printf -- "---------------------------------------------------\n"
 
 final_report
+
+krun -d .. plutus-core-prelude/prelude.plc | diff plutus-core-prelude/prelude.plc.out - > /dev/null;
+if [ $? != 0 ]
+  then report_case 1 plutus-core-prelude/prelude.plc
+  else report_case 0 plutus-core-prelude/prelude.plc
+fi;
