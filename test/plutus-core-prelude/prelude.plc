@@ -709,4 +709,10 @@
     (case [Prelude.evalMASTPath path]
       (cl Prelude.False () (con Prelude.False))
       (cl Prelude.True () (builtin equalsByteString hash [Prelude.hashMASTPath path]))))))
+
+// (define test-flip [[Prelude.flip (lam x y (builtin subtractInt x y))] 2 3])
+(define test_fst [Prelude.fst (con Prelude.MkPair 1 2)])
+(define test_snd [Prelude.snd (con Prelude.MkPair 1 2)])
+// (define test_curry [[Prelude.curry (lam x y (builtin addInt x y))] (con Prelude.MkPair 1 2)])
+
 )
