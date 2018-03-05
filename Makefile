@@ -34,20 +34,20 @@ $(k_submodule)/make.timestamp:
 
 # Allow expansion of $* in wildcard; See https://stackoverflow.com/questions/15948822/directory-wildcard-in-makefile-pattern-rule
 .SECONDEXPANSION:
-.build/%/plutus-core-kompiled/kore.txt: src/%/plutus-core.k $(wildcard src/*.k) $$(wildcard src/$$*/*.k) $(dep_files)
+.build/%/plutus-core-kompiled/timestamp: src/%/plutus-core.k $(wildcard src/*.k) $$(wildcard src/$$*/*.k) $(dep_files)
 	$(k_bin)/kompile --debug --verbose --directory .build/$*/ \
 					 --syntax-module PLUTUS-CORE-SYNTAX src/$*/plutus-core.k
-# Since the kore.txt targets aren't explicitly mentioned as targets, it treats
+# Since the `timestamp` targets aren't explicitly mentioned as targets, it treats
 # them as intermediate targets and deletes them when it is done. Marking
 # them as PRECIOUS prevents this.
-.PRECIOUS: .build/%/plutus-core-kompiled/kore.txt
+.PRECIOUS: .build/%/plutus-core-kompiled/timestamp
 
 build: execution translation erc20 typing
 
-execution:   .build/execution/plutus-core-kompiled/kore.txt
-translation: .build/translation/plutus-core-kompiled/kore.txt
-erc20:       .build/erc20/plutus-core-kompiled/kore.txt
-typing:      .build/typing/plutus-core-kompiled/kore.txt
+execution:   .build/execution/plutus-core-kompiled/timestamp
+translation: .build/translation/plutus-core-kompiled/timestamp
+erc20:       .build/erc20/plutus-core-kompiled/timestamp
+typing:      .build/typing/plutus-core-kompiled/timestamp
 
 # Testing
 # -------
@@ -66,10 +66,10 @@ test-translation: $(translation_tests:=.test)
 test-execution: $(execution_tests:=.test)
 test-erc20: $(erc20_tests:=.test)
 
-test/%.plc.test: .build/$$(dir $$*)/plutus-core-kompiled/kore.txt
+test/%.plc.test: .build/$$(dir $$*)/plutus-core-kompiled/timestamp
 	$(TEST) test/$*.plc
 
-test-verify: .build/execution/plutus-core-kompiled/kore.txt
+test-verify: .build/execution/plutus-core-kompiled/timestamp
 	./kplc prove execution verification/int-addition_spec.k             verification/dummy.plcore
 	./kplc prove execution verification/int-addition-with-import_spec.k verification/int-addition-lib.plcore
 	./kplc prove execution verification/equality_spec.k                 verification/dummy.plcore
@@ -89,7 +89,7 @@ test-verify: .build/execution/plutus-core-kompiled/kore.txt
 	./kplc prove execution verification/maybe-nothing_spec.k            verification/prelude.plc
 	./kplc prove execution verification/maybe-just_spec.k               verification/prelude.plc
 
-test-verify-commented: .build/execution/plutus-core-kompiled/kore.txt
+test-verify-commented: .build/execution/plutus-core-kompiled/timestamp
 	./kplc prove execution verification/id_spec.k                       verification/prelude.plc
 	./kplc prove execution verification/fst_spec.k                      verification/prelude.plc
 	./kplc prove execution verification/snd_spec.k                      verification/prelude.plc
