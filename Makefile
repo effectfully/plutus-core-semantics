@@ -5,7 +5,7 @@ build_dir:=$(CURDIR)/.build
 k_submodule:=$(build_dir)/k
 k_bin:=$(k_submodule)/k-distribution/target/release/k/bin
 
-.PHONY: all clean build deps \
+.PHONY: all clean build deps ocaml-deps \
         execution translation erc20 typing \
         test test-passing test-failing test-verify test-verify-commented
         # Somehow SECONDEXPANSION and PHONY are interacting poorly, meaning these can't be PHONY
@@ -21,13 +21,22 @@ clean:
 
 dep_files:=$(k_submodule)/make.timestamp
 
-deps: $(dep_files)
+deps: $(dep_files) ocaml-deps
 
 $(k_submodule)/make.timestamp:
 	git submodule update --init -- $(k_submodule)
 	cd $(k_submodule) \
 		&& mvn package -q -DskipTests
 	touch $(k_submodule)/make.timestamp
+
+ocaml-deps:
+	opam init --quiet --no-setup
+	opam repository add k "$(k_submodule)/k-distribution/target/release/k/lib/opam" \
+	    || opam repository set-url k "$(k_submodule)/k-distribution/target/release/k/lib/opam"
+	opam update
+	opam switch 4.03.0+k
+	eval $$(opam config env) \
+	opam install --yes mlgmp zarith uuidm
 
 # Build
 # -----
