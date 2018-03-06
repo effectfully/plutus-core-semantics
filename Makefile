@@ -34,20 +34,21 @@ $(k_submodule)/make.timestamp:
 
 # Allow expansion of $* in wildcard; See https://stackoverflow.com/questions/15948822/directory-wildcard-in-makefile-pattern-rule
 .SECONDEXPANSION:
-.build/%/plutus-core-kompiled/timestamp: src/%/plutus-core.k $(wildcard src/*.k) $$(wildcard src/$$*/*.k) $(dep_files)
+
+.build/%/plutus-core-kompiled/interpreter: src/%/plutus-core.k $(wildcard src/*.k) $$(wildcard src/$$*/*.k) $(dep_files)
 	$(k_bin)/kompile --debug --verbose --directory .build/$*/ \
 					 --syntax-module PLUTUS-CORE-SYNTAX src/$*/plutus-core.k
-# Since the `timestamp` targets aren't explicitly mentioned as targets, it treats
+# Since the `interpreter` targets aren't explicitly mentioned as targets, it treats
 # them as intermediate targets and deletes them when it is done. Marking
 # them as PRECIOUS prevents this.
-.PRECIOUS: .build/%/plutus-core-kompiled/timestamp
+.PRECIOUS: .build/%/plutus-core-kompiled/interpreter
 
 build: execution translation erc20 typing
 
-execution:   .build/execution/plutus-core-kompiled/timestamp
-translation: .build/translation/plutus-core-kompiled/timestamp
-erc20:       .build/erc20/plutus-core-kompiled/timestamp
-typing:      .build/typing/plutus-core-kompiled/timestamp
+execution:   .build/execution/plutus-core-kompiled/interpreter
+translation: .build/translation/plutus-core-kompiled/interpreter
+erc20:       .build/erc20/plutus-core-kompiled/interpreter
+typing:      .build/typing/plutus-core-kompiled/interpreter
 
 # Testing
 # -------
@@ -66,10 +67,10 @@ test-translation: $(translation_tests:=.test)
 test-execution: $(execution_tests:=.test)
 test-erc20: $(erc20_tests:=.test)
 
-test/%.plc.test: .build/$$(dir $$*)/plutus-core-kompiled/timestamp
+test/%.plc.test: .build/$$(dir $$*)/plutus-core-kompiled/interpreter
 	$(TEST) test/$*.plc
 
-test-verify: .build/execution/plutus-core-kompiled/timestamp
+test-verify: .build/execution/plutus-core-kompiled/interpreter
 	./kplc prove execution verification/int-addition_spec.k             verification/dummy.plcore
 	./kplc prove execution verification/int-addition-with-import_spec.k verification/int-addition-lib.plcore
 	./kplc prove execution verification/equality_spec.k                 verification/dummy.plcore
