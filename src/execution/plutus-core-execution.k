@@ -1,9 +1,9 @@
 require "../syntax.k"
-require "hex-conversion.k"
+require "../hex-conversion.k"
 
 module PLUTUS-CORE-EXECUTION
-  imports PLUTUS-CORE-SYNTAX
-  imports HEX-CONVERSION
+  imports PLUTUS-CORE-EXEC-REDUCTIONS
+
 // --- TODO: Disabled KRYPO support to ease transition to K5
 //  imports KRYPTO
 
@@ -28,6 +28,11 @@ module PLUTUS-CORE-EXECUTION
         </Module>
       </modules>
     </T>
+endmodule
+
+module PLUTUS-CORE-EXEC-REDUCTIONS
+  imports PLUTUS-CORE-SYNTAX
+  imports HEX-CONVERSION
 
   /***************************************************************************/
   /***********************  BUILT-IN REDUCTIONS   ****************************/

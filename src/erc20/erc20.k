@@ -7,6 +7,8 @@
    See erc20.md for comments.  */
 
 module ERC20
+  imports DOMAINS
+
   syntax Value   ::= Int  // this can be changed
   syntax Address ::= Int  // this can be changed
 

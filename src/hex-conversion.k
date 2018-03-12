@@ -1,4 +1,5 @@
 module HEX-CONVERSION
+  imports DOMAINS
 
   syntax String ::= #toHex(Int)                                      [function]
                   | #hex(Int)                                        [function]

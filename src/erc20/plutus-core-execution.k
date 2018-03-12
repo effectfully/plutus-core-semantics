@@ -1,10 +1,28 @@
-require "plutus-core-syntax.k"
-require "hex-conversion.k"
+require "../syntax.k"
+require "../hex-conversion.k"
+require "../execution/plutus-core-execution.k"
+
+module PLUTUS-ERC20-SYNTAX
+  imports ERC20
+  imports PLUTUS-CORE-SYNTAX
+
+  syntax Dec ::= "test.preamble" "(" ")" [macro]
+               | "test.allowances" "(" Tm ")" [prefer, strict]
+
+  syntax Def ::= "test.makeBalance" "(" TmDef ")" [prefer, strict]
+               | "test.makeCaller" "(" TmDef ")" [prefer, strict]
+               | "test.makeTotalSupply" "(" TmDef ")" [prefer, strict]
+               | "test.totalSupply" "(" ")" [prefer, strict]               
+               | "test.balanceOf" "(" TmDef ")" [prefer, strict]
+               | "test.allowance" "(" TmDef "," TmDef ")" [prefer, strict]
+               | "test.approve" "(" TmDef "," TmDef ")" [prefer, strict]
+               | "test.transfer" "(" TmDef "," TmDef ")" [prefer, strict]
+               | "test.transferFrom" "(" TmDef "," TmDef "," TmDef ")" [prefer, strict]
+endmodule
 
 module PLUTUS-CORE-EXECUTION
-  imports PLUTUS-CORE-SYNTAX
-  imports KRYPTO
-  imports HEX-CONVERSION
+  imports PLUTUS-ERC20-SYNTAX
+  imports PLUTUS-CORE-EXEC-REDUCTIONS
 
   configuration
     <PLUTUS>
@@ -18,195 +36,6 @@ module PLUTUS-CORE-EXECUTION
       <throwAsPrint> ERCFalse:ERCBool </throwAsPrint> // for print THROW
       <printStrings> ERCTrue:ERCBool </printStrings>  // for tests
     </PLUTUS>
-
-  /***************************************************************************/
-  /***********************  BUILT-IN REDUCTIONS   ****************************/
-  /***************************************************************************/
-
-  rule ( builtin addInteger:Name       I1:Int I2:Int ) => I1 +Int I2
-  rule ( builtin subtractInteger:Name  I1:Int I2:Int ) => I1 -Int I2
-  rule ( builtin multiplyInteger:Name  I1:Int I2:Int ) => I1 *Int I2
-  rule ( builtin divideInteger:Name    I1:Int I2:Int ) => I1 /Int I2
-    when I2 =/=Int 0
-  rule ( builtin remainderInteger:Name I1:Int I2:Int ) => I1 %Int I2
-    when I2 =/=Int 0
-
-  // TODO: define semantics for compbuiltin.
-
-  syntax Tm ::= #conHolder(K, K)
-              | #qualCHolder(K, K)
-  rule #conHolder(MN, C) => ( con (MN . C):QualC .ValList )
-
-  rule #stringToModName(S:String)
-    => #parseToken("ModName@PLUTUS-CORE-SYNTAX", S)
-  rule #stringToCon(S:String) => #parseToken("Con@PLUTUS-CORE-SYNTAX", S)
-
-  syntax Prim ::= "#primTrue" | "#primFalse"
-  rule #primTrue
-    => #conHolder(#stringToModName("Prelude"), #stringToCon("True"))
-  rule #primFalse
-    => #conHolder(#stringToModName("Prelude"), #stringToCon("False"))
-
-  rule ( builtin equalsInteger:Name I:Int I:Int        ) => #primTrue
-    [transition]
-  rule ( builtin equalsInteger:Name I1:Int I2:Int      ) => #primFalse
-    when I1 =/=Int I2
-    [transition]
-  rule ( builtin lessThanInteger:Name I1:Int I2:Int    ) => #primTrue
-    when I1 <Int I2
-  rule ( builtin lessThanInteger:Name I1:Int I2:Int    ) => #primFalse
-    when notBool (I1 <Int I2)
-  rule ( builtin greaterThanInteger:Name I1:Int I2:Int ) => #primTrue
-    when I1 >Int I2
-  rule ( builtin greaterThanInteger:Name I1:Int I2:Int ) => #primFalse
-    when notBool (I1 >Int I2)
-
-  rule ( builtin integerToByteString:Name 0 )    => #toByStr("0")
-  rule ( builtin integerToByteString:Name I:Int) => #toByStr(#toHex(I))
-    when I =/=Int 0
-
-  syntax ByStr ::= #toByStr ( String )                                [function]
-  rule #toByStr(S:String)
-    => #parseToken("ByStr@PLUTUS-CORE-SYNTAX", ("#" +String S))
-
-  rule #toString(B:ByStr):String
-    => substrString(#toStringVerbatim(B), 1, lengthString(#toStringVerbatim(B)))
-
-  rule ( builtin takeByteString:Name N:Int B:ByStr )
-    => #toByStr(substrString(#toString(B), 0, N))
-
-  rule ( builtin dropByteString:Name N:Int B:ByStr )
-    => #toByStr(substrString(#toString(B), N, lengthString(#toString(B))))
-
-  rule ( builtin concatenate:Name B1:ByStr B2:ByStr )
-    => #toByStr(#toString(B1) +String #toString(B2))
-
-  rule ( builtin sha3_256:Name B:ByStr ) => #toByStr(Sha3256(#toString(B)))
-  rule ( builtin sha2_256:Name B:ByStr ) => #toByStr(Sha256(#toString(B)))
-
-  rule ( builtin equalsByteString:Name B1:ByStr B2:ByStr )
-    => #primTrue when #toString(B1) ==String #toString(B2)
-
-  rule ( builtin equalsByteString:Name B1:ByStr B2:ByStr )
-    => #primFalse when #toString(B1) =/=String #toString(B2)
-
-  /***************************************************************************/
-  /************************   LOCAL REDUCTIONS   *****************************/
-  /***************************************************************************/
-
-  rule [ F:Val M1:Tm M2:Tm MS:TmList ] => [ [ F M1 ] M2 MS ]
-
-  // From desugaring constructors, we may have lambda expressions with no
-  // variables and application to an empty TmList.
-  rule ( lam .VarList M:Tm ) => M
-  rule [ V:Val .TmList ] => V
-
-  // When a lambda abstracts more than one variable, desugar it to a
-  // combination of unary lambdas.
-  rule ( lam X1:Var X2:Var XS:VarList M:Tm )
-    => ( lam X1 .VarList ( lam X2 XS M ) )
-
-  syntax Val ::= closure(Map, Var, Tm)
-
-  // Wrapper around function application in order to make application strict
-  syntax Tm ::= app(Tm, Tm)                                            [strict]
-  rule [ F:Val M:Tm ] => app(F, M)
-  
-  rule
-    <k> ( lam X:Var M:Tm ):Tm => closure(Rho, X, M) ... </k>
-    <lenv> Rho </lenv>
-    [structural]
-
-  rule
-    <k> app(closure(Rho, X, M), V:Val) => M ~> Rho' ... </k>
-    <lenv> Rho' => Rho[X <- V] </lenv>
-    [structural]
-
-  rule
-    <k> _:Val ~> (Rho => .K) ... </k>
-    <lenv> _ => Rho </lenv>
-    [structural]
-
-  rule
-    <k> X:Var => V ... </k>
-    <lenv> ... X |-> V ... </lenv>
-
-  // Desugar let expression to lambda expression
-  rule ( let N:Tm X:Var M:Tm ):Tm => [ ( lam X M ) N ]
-
-  // Process modules in order
-  rule (program M:Mod ML:ModList) => M ~> ML:ModList
-  rule .ModList => .K
-
-  // Process the definitions in order.
-  rule D:Dec DS:DecList => D ~> DS
-
-  // Ignoring typing stuff
-  rule ( declare N:Name T:Ty ) => .K
-  rule ( data C:TyCon ( KSL:KSigList ) AL:AltList ) => .K
-  rule ( isa M:Tm T:Ty ) => .K
-  rule ( abs V:Var M:Tm ):Tm => M
-  rule ( inst M:Tm T:Ty ) => .K
-
-  rule
-    <k> ( define N:Name V:Val ) => .K ... </k>
-    <mod> MN </mod>
-    <lenv> _ => .Map </lenv>
-    <genv> ... .Map => (MN . N):QualN |-> V ... </genv>
-
-  syntax ModF ::= "(" "moduleF" ModName ImpD ExpD LocD ")"
-
-  rule
-    <k>
-      ( module MN:ModName IS ES LS DEFS ) => DEFS ~> ( moduleF MN IS ES LS ) ...
-    </k>
-    <mod> CurrMN => MN </mod>
-
-  rule
-    <k> QN:QualN => V ... </k>
-    <genv> ... QN |-> V ... </genv>
-
-  rule _:ModF => .K
-  rule .DecList => .K
-
-  /***************************************************************************/
-  /************************   PATTERN MATCHING   *****************************/
-  /***************************************************************************/
-
-  syntax TmList ::= #toTermList(ValList)                             [function]
-  rule #toTermList(.ValList) => .TmList
-  rule #toTermList(M:Val MS:ValList) => M #toTermList(MS)
-
-  syntax Tm ::= "#ifTm" Bool "#then" Tm "#else" Tm "#fi"             [function]
-
-  rule ( case ( con QC:QualC MS:ValList )
-              ( QC':QualC ( XS:VarList ) M:Tm ) CL:ClList )
-    => #ifTm (QC ==K QC') #then [ ( lam XS M ) #toTermList(MS) ]
-                          #else ( case ( con QC:QualC MS:ValList ) CL )
-       #fi
-
-  rule #ifTm true #then M #else _ #fi => M
-  rule #ifTm false #then _ #else M #fi => M
-
-  // Convert TmList into ValList and convert (success Tm) into (success Val)
-  syntax K ::= #freezeCon(QualC, ValList)
-             | "#freezeSucc()"
-
-  rule ( con QC:QualC MS:TmList ) => MS ~> #freezeCon(QC, .ValList)
-  rule .TmList ~> #freezeCon(QC:QualC, VL:ValList) => ( con QC #reverse(VL) )
-  rule (M:Tm MS:TmList => M ~> MS) ~> #freezeCon(QC:QualC, VL:ValList)
-  rule V:Val ~> MS:TmList ~> #freezeCon(QC:QualC, VL:ValList)
-    => MS ~> #freezeCon(QC, V VL)
-
-  syntax ValList ::= #reverse(ValList)                               [function]
-                   | #reverseAux(ValList, ValList)                   [function]
-
-  rule #reverse(V:ValList) => #reverseAux(V, .ValList)
-  rule #reverseAux(.ValList, VL:ValList) => VL
-  rule #reverseAux(V:Val VL1:ValList, VL2:ValList) => #reverseAux(VL1, V VL2)
-
-  rule (success M):Tm => M ~> #freezeSucc()
-  rule V:Val ~> #freezeSucc() => (success V):Val
 
   /***************************************************************************/
   /************************   ERC 20 CONSTRUCTS   ****************************/
