@@ -70,6 +70,23 @@ def generate_tests(type):
                 tr_no_alg_data_types
                )
 
+def generate_static_function_tests():
+    [('alloc_does_not_return_zero', 23,
+      """
+        %one = call alloc(3)
+        %two = call alloc(7)
+        ret %one
+      }
+      """, 1),
+     ('alloc_returns_non_overlapping', 23,
+      """
+        %one = call alloc(3)
+        %two = call alloc(7)
+        ret %two
+      }
+      """, 4),
+    ]
+
 @pytest.mark.parametrize("file, mod, fct, args, expected", generate_tests('execution'))
 def test_execution(file, mod, fct, args, expected):
     krun_args = [bin("kplc"), "run", "execution", base("test/execution/", file +".plc"),
