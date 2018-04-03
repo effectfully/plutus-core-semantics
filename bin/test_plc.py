@@ -87,14 +87,20 @@ def generate_tests(type):
             ("module-call-private-indirect", "Foo",       "bar", [0],   19),
             ("module-call-private-indirect", "Foo",       "baz", [0],   23),
            ]
+    translation_unimplemented = [
+            ("ctor-case", "Foo", "bar", [0], 19),
+            ("ctor-case", "Foo", "baz", [0], 23),
+           ]
 
     if type == 'translation':
-        return (passing                                                       +
-                exec_no_error_code                                            +
-                map(pytest.mark.xfail(reason="unimplemented"), unimplemented)
+        return (passing                                                                               +
+                exec_no_error_code                                                                    +
+                map(pytest.mark.xfail(reason="unimplemented"), unimplemented)                         +
+                map(pytest.mark.xfail(reason="translation unimplemented"), translation_unimplemented)
                )
     if type == 'execution':
         return (passing                                                                 +
+                translation_unimplemented                                               +
                 map(pytest.mark.xfail(reason="exit code not impl"), exec_no_error_code) +
                 map(pytest.mark.xfail(reason="unimplemented"), unimplemented)
                )
