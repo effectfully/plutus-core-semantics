@@ -73,14 +73,20 @@ def generate_tests(type):
             ("cmp-ops", "Foo", "myTrue",        [],       "(con Prelude.True .ValList)" ),
            ]
 
+    unimplemented = [
+            ("ctor-duplicate", "Duplicate", "one", [], None ),
+           ]
+
     if type == 'translation':
         return (passing                                                                    +
                 exec_no_error_code                                                         +
+                map(pytest.mark.xfail(reason="unimplemented"), unimplemented)              +
                 map(pytest.mark.xfail(reason="no alg data types" ), tr_no_alg_data_types)
                )
     if type == 'execution':
         return (passing                                                                    +
                 map(pytest.mark.xfail(reason="exit code not impl"), exec_no_error_code)    +
+                map(pytest.mark.xfail(reason="unimplemented"), unimplemented)              +
                 tr_no_alg_data_types
                )
 
