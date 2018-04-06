@@ -94,8 +94,8 @@ translate-to-iele: $(translate_plc:.plc=.iele)
 test-erc20: $(erc20_tests:=.test)
 
 test/%.iele: test/%.plc .build/translation/plutus-core-kompiled/interpreter
-	eval bin/activate                                                     && \
-	./bin/kplc run translation $< | bin/config-to-iele > $@
+	bash -c 'source bin/activate                                          && \
+	         ./bin/kplc run translation $< | bin/config-to-iele > $@'
 
 test-verify: .build/execution/plutus-core-kompiled/interpreter
 	./bin/kplc prove execution verification/int-addition_spec.k             verification/dummy.plcore
