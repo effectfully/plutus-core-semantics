@@ -22,10 +22,10 @@ module PLUTUS-CORE-EXECUTION
       <exit-code exit=""> 1 </exit-code>
       <lenv> .Map </lenv>
       <genv> .Map </genv>
+      <currModules> .List </currModules>
       <modules>
         // K5 Does not like cells named 'module'
         <Module multiplicity="*" type="Set">
-          <curr> 0 </curr>
           <name> .ModName </name>
           <dataCons> .TyExpList </dataCons>
           <decl> .NameList:NameList </decl>
@@ -169,17 +169,15 @@ module PLUTUS-CORE-EXECUTION
   rule ( abs V:Var M:Tm ):Tm => M
   rule ( inst M:Tm T:Ty ) => .K
 
-  // Begin processing a module, add new <Module> cell
-  //rule ( module MN:ModName (import MNL) (export (TXL) (NL)) DEFS ) .DecList => DEFS
-
+  // Begin processing a module, add new <Module> cell, add module to currModules stack
   rule
     <k>
       ( module MN:ModName (import MNL) (export (TXL) (NL:NameList)) DEFS ) => DEFS ...
     </k>
+    <currModules> MODS => ListItem(MN) MODS </currModules>
     <modules> ...
       .Bag =>
       <Module>
-        <curr> 1 </curr>
         <name> MN </name>
         <dataCons> .TyExpList </dataCons>
         <decl> .NameList:NameList </decl>
@@ -189,61 +187,80 @@ module PLUTUS-CORE-EXECUTION
       </Module>
     </modules>
 
+  // When done evaluating, pop module from module stack
+  syntax K ::= "#popModule"
+  rule
+    <k> V:Val ~> (#popModule => .K) ... </k>
+    <currModules> (ListItem(MN) => .List) MODS </currModules>
+
   // Add data declaration to dataCons subcell
   rule
     <k> ( data TC:TyCon ( KSL:KSigList ) AL:AltList ) => .K ... </k>
-    <curr> 1 </curr>
-    <dataCons> DL => ( TC ( #getConListAlt(AL) ) ) DL </dataCons>
+    <currModules> ListItem(MN) MODS </currModules>
+    <Module>
+      <name> MN </name>
+      <dataCons> DL => ( TC ( #getConListAlt(AL) ) ) DL </dataCons>
+      ...
+    </Module>
 
   // Add declared name to decls
   rule
     <k> ( declare N T:Ty ) => .K ... </k>
-    <curr> 1 </curr>
-    <decl> DL => N DL </decl>
+    <currModules> ListItem(MN) MODS </currModules>
+    <Module>
+      <name> MN </name>
+      <decl> DL => N DL </decl>
+      ...
+    </Module>
 
   // Add V to env of current module
   rule
     <k> ( define N:Name V:Val ) => .K ... </k>
-    <curr> 1 </curr>
-    <name> MN </name>
+    <currModules> ListItem(MN) MODS </currModules>
     <lenv> _ => .Map </lenv>
     <genv> ... .Map => (MN . N):QualN |-> V ... </genv>
+    <Module>
+      <name> MN </name>
+      ...
+    </Module>
 
   // Finishing processing a module as there are no more definitions
   rule <k> .DecList => .K ... </k>
-       <curr> 1 => 0 </curr>
+       <currModules> (ListItem(MN) => .List) MODS </currModules>
+       <Module>
+         <name> MN </name>
+         ...
+       </Module>
 
   // Qualified Name reduces if it is in the current module
   rule
     <k> (MN . N):QualN => V ... </k>
+    <currModules> ListItem(MN) MODS </currModules>
     <genv> ... (MN . N):QualN |-> V ... </genv>
-    <curr> 1 </curr>
-    <name> MN </name>
-    <decl> DL:NameList </decl>
+    <Module>
+      <name> MN </name>
+      <decl> DL:NameList </decl>
+      ...
+    </Module>
     when N #in_n DL
 
   // Qualified name reduces if the name is exported from a different module
-  // which is imported by the current module
+  // which is imported by the current module. Also add imported module to module
+  // stack and mark for popping later
   rule
-    <k> (MN' . N):QualN => V ... </k>
+    <k> ((MN' . N):QualN => V) ~> REST ~> (.K => #popModule) </k>
     <genv> ... (MN' . N):QualN |-> V ... </genv>
+    <currModules> (.List => ListItem(MN')) ListItem(MN) MODS </currModules>
     <Module>
-      <curr> 1 </curr>
       <name> MN </name>
-      <dataCons> _ </dataCons>
-      <decl> _ </decl>
       <importedModules> MNL </importedModules>
-      <exportTy> _ </exportTy>
-      <exportTm> _ </exportTm>
+      ...
     </Module>
     <Module>
-      <curr> 0 </curr>
       <name> MN' </name>
-      <dataCons> _ </dataCons>
       <decl> DL:NameList </decl>
-      <importedModules> _ </importedModules>
-      <exportTy> _ </exportTy>
       <exportTm> NL:NameList </exportTm>
+      ...
     </Module>
     when (MN' #in_mn MNL) andBool (N #in_n NL) andBool (N #in_n DL)
 
@@ -265,34 +282,32 @@ module PLUTUS-CORE-EXECUTION
   // Case match is valid if the type was defined in the current module and
   // all clauses match all constructors
   rule
-    <k> ( case M CLS ) => #valid ~> ( case M CLS ) ... </k>
-    <curr> 1 </curr>
-    <name> MN </name>
-    <dataCons> TXL </dataCons>
+    <k> (.K => #valid) ~> ( case M CLS ) ... </k>
+    <currModules> ListItem(MN) MODS </currModules>
+    <Module>
+      <name> MN </name>
+      <dataCons> TXL </dataCons>
+      ...
+    </Module>
     when #getConListCl(CLS) #in_tx TXL
 
   // Case match is valid if the type was defined in another module, all
   // clauses match all constructors, all constructors are exported from that
-  // module, and that module is importad from the current module
+  // module, and that module is importad from the current module.
+  // Also add imported module to module stack and mark for popping later.
   rule
-    <k> ( case M CLS ) => #valid ~> ( case M CLS ) ... </k>
+    <k> (.K => #valid) ~> ( case M CLS ) ~> REST ~> (.K => #popModule) </k>
+    <currModules> (.List => ListItem(MN')) ListItem(MN) MODS </currModules>
     <Module>
-      <curr> 1 </curr>
       <name> MN </name>
-      <dataCons> _ </dataCons>
-      <decl> _ </decl>
       <importedModules> MNL </importedModules>
-      <exportTy> _ </exportTy>
-      <exportTm> _ </exportTm>
+      ...
     </Module>
     <Module>
-      <curr> 0 </curr>
       <name> MN' </name>
       <dataCons> TXL </dataCons>
-      <decl> _ </decl>
-      <importedModules> _ </importedModules>
       <exportTy> TXL' </exportTy>
-      <exportTm> _ </exportTm>      
+      ...
     </Module>
     when #getConListCl(CLS) #in_tx TXL andBool #getConListCl(CLS) #in_tx TXL'
                                        andBool MN' #in_mn MNL
@@ -331,10 +346,10 @@ module PLUTUS-CORE-EXECUTION
   /***************************************************************************/
 
   rule <k> #main(MN, N, ARGS) => [ (MN . N):QualN ARGS ] </k>
+       <currModules> MODS => ListItem(#MainModule) MODS </currModules>
        <modules> ...
          .Bag =>
          <Module>
-           <curr> 1 </curr>
            <name> #MainModule </name>
            <dataCons> .TyExpList </dataCons>
            <decl> .NameList:NameList </decl>
