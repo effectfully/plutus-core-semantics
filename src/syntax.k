@@ -34,6 +34,8 @@ module PLUTUS-CORE-COMMON
   // Name.
   syntax Name    ::= LowerName
                    | #stringToName(String)                           [function]
+                   // Add BuiltinNames as Names to avoid bug in K parser
+                   | BuiltinName
   syntax TyName  ::= LowerName
 
   // Builtin Name
