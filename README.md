@@ -22,6 +22,10 @@ To translate to IELE, run: `./build kplc run translate <pgm.plc> [arguments to b
 To Do
 -----
 
+### Parsing
+
+- Function with name `integerToByteString` flakes out
+
 ### Execution
 
 - Remove let, tests that involve let
