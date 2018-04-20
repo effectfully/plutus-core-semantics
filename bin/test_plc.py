@@ -19,6 +19,7 @@ def bin(*args):
 
 class ExitCode_NotPublic    : pass
 class ExitCode_DivByZero    : pass
+class ExitCode_TakeFromEmpty: pass
 class ExitCode_NonExhaustive: pass
 
 def toIeleExitStatus(expected):
@@ -35,6 +36,7 @@ def toIeleExitStatus(expected):
 
     if   expected == ExitCode_NotPublic     : return FUNC_NOT_FOUND
     elif expected == ExitCode_DivByZero     : return USER_ERROR
+    elif expected == ExitCode_TakeFromEmpty : return USER_ERROR
     elif expected == ExitCode_NonExhaustive : return USER_ERROR
     else                                    : return ""
 
@@ -42,6 +44,7 @@ def toPlutusExitCode(expected):
     if   expected == ExitCode_NotPublic     : return 1
     elif expected == ExitCode_DivByZero     : return 1
     elif expected == ExitCode_NonExhaustive : return 1
+    elif expected == ExitCode_TakeFromEmpty : return 1
     else                                    : return 0
 
 def toIeleReturn(expected):
@@ -132,6 +135,19 @@ def generate_tests(type):
             ("ctor-case", "Foo", "baz", [0], 23),
             ("module-call-private-indirect", "Foo", "bar", [0],   19),
             ("module-call-private-indirect", "Foo", "baz", [0],   23),
+
+            ("bytestring", "Foo", "toByteString",    [0x2345],  "2345"),
+            ("bytestring", "Foo", "toByteString",    [0x0000],  "0"),
+            ("bytestring", "Foo", "takeByteStringx", [0,   "23"],   ""),
+            ("bytestring", "Foo", "takeByteStringx", [1, "2345"], "23"),
+            ("bytestring", "Foo", "takeByteStringx", [0,  ""],      ""),
+            ("bytestring", "Foo", "takeByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
+
+            ("bytestring", "Foo", "dropByteStringx", [0,   "23"], "23"),
+            ("bytestring", "Foo", "dropByteStringx", [1, "2345"], "45"),
+            ("bytestring", "Foo", "dropByteStringx", [0,  ""],      ""),
+            ("bytestring", "Foo", "dropByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
+
            ]
 
     if type == 'translation':
