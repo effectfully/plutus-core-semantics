@@ -70,7 +70,7 @@ module PLUTUS-CORE-EXECUTION
   rule (builtin greaterThanInteger       I1:Int I2:Int) => #primBool(I1  >Int I2)
   rule (builtin greaterThanEqualsInteger I1:Int I2:Int) => #primBool(I1 >=Int I2)
 
-  rule ( builtin integerToByteString 0 )    => #toByStr("0")
+  rule ( builtin integerToByteString 0 )    => #toByStr("00")
   rule ( builtin integerToByteString I:Int) => #toByStr(#toHex(I))
     when I =/=Int 0
 

@@ -149,7 +149,7 @@ def generate_tests(type):
             ("bytestring", "Foo", "dropByteStringx", [0,  ""],      ""),
             ("bytestring", "Foo", "dropByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
 
-            ("bytestring", "Foo", "toByteStringAndDrop", [1, 0],  "00"),
+            ("bytestring", "Foo", "toByteStringAndDrop", [1, 0],  ""),
            ]
 
     if type == 'translation':

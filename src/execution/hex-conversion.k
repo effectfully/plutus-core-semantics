@@ -25,8 +25,11 @@ module HEX-CONVERSION
 
   // This will fail on 0, so should not be used by itself. See the rules for
   // `(builtin intToByteString (...))`.
+  // TODO: Really, we should be using `List{Byte, ""}` or similar.
   rule #toHex(0) => ""
-  rule #toHex(N:Int) => #toHex(N /Int 16) +String #hex(N %Int 16)
-                          when N =/=Int 0
+  rule #toHex(N:Int)
+    => #toHex(N /Int 256)
+       +String #hex((N %Int 256) /Int 16) +String #hex(N %Int 16)
+    when N =/=Int 0
 
 endmodule
