@@ -65,11 +65,6 @@ module PLUTUS-CORE-COMMON
   syntax ByStr   ::= r"\\#[a-fA-F0-9]([a-fA-F0-9])*"                    [token]
                    | "#\".\""                                           [token]
 
-  syntax Char    ::= r"\".\""                                           [token]
-
-  // Arity.
-  syntax Arity   ::= r"[0-9]+"                                          [token]
-
   // TODO: Make sure preferring Var over TyVar is ok.
   // Variable.
   syntax Var     ::= LowerName
