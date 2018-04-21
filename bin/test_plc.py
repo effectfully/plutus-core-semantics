@@ -138,16 +138,16 @@ def generate_tests(type):
 
             ("bytestring", "Foo", "toByteString",    [0x2345],  "2345"),
             ("bytestring", "Foo", "toByteString",    [0x0000],    "00"),
-            ("bytestring", "Foo", "takeByteStringx", [0,   "23"],   ""),
-            ("bytestring", "Foo", "takeByteStringx", [1, "2345"], "23"),
-            ("bytestring", "Foo", "takeByteStringx", [0,  ""],      ""),
-            ("bytestring", "Foo", "takeByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
+            ("bytestring", "Foo", "takeByteString", [0,   "23"],   ""),
+            ("bytestring", "Foo", "takeByteString", [1, "2345"], "23"),
+            ("bytestring", "Foo", "takeByteString", [0,  ""],      ""),
+            ("bytestring", "Foo", "takeByteString", [2,  ""], ExitCode_TakeFromEmpty),
 
-            ("bytestring", "Foo", "dropByteStringx", [0,   "23"], "23"),
-            ("bytestring", "Foo", "dropByteStringx", [1, "2345"], "45"),
-            ("bytestring", "Foo", "dropByteStringx", [1, "2300"], "00"),
-            ("bytestring", "Foo", "dropByteStringx", [0,  ""],      ""),
-            ("bytestring", "Foo", "dropByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
+            ("bytestring", "Foo", "dropByteString", [0,   "23"], "23"),
+            ("bytestring", "Foo", "dropByteString", [1, "2345"], "45"),
+            ("bytestring", "Foo", "dropByteString", [1, "2300"], "00"),
+            ("bytestring", "Foo", "dropByteString", [0,  ""],      ""),
+            ("bytestring", "Foo", "dropByteString", [2,  ""], ExitCode_TakeFromEmpty),
 
             ("bytestring", "Foo", "toByteStringAndDrop", [1, 0],  "00"),
            ]

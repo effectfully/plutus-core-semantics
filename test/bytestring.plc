@@ -1,17 +1,17 @@
 (program
-  (module Foo (import) (export () (toByteString takeByteStringx
-         dropByteStringx toByteStringAndDrop))
+  (module Foo (import) (export () (toByteString takeByteString
+         dropByteString toByteStringAndDrop))
 
     (declare toByteString (fun (integer) (bytestring)))
     (define  toByteString
       (lam x (builtin integerToByteString x)))
 
-    (declare takeByteStringx (fun (integer) (fun (bytestring) (bytestring))))
-    (define  takeByteStringx
+    (declare takeByteString (fun (integer) (fun (bytestring) (bytestring))))
+    (define  takeByteString
       (lam x (lam y (builtin takeByteString x y))))
 
-    (declare dropByteStringx (fun (integer) (fun (bytestring) (bytestring))))
-    (define  dropByteStringx
+    (declare dropByteString (fun (integer) (fun (bytestring) (bytestring))))
+    (define  dropByteString
       (lam x (lam y (builtin dropByteString x y))))
 
     (declare toByteStringAndDrop (fun (integer) (fun (integer) (bytestring))))
