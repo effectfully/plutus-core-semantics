@@ -137,7 +137,7 @@ def generate_tests(type):
             ("module-call-private-indirect", "Foo", "baz", [0],   23),
 
             ("bytestring", "Foo", "toByteString",    [0x2345],  "2345"),
-            ("bytestring", "Foo", "toByteString",    [0x0000],  "0"),
+            ("bytestring", "Foo", "toByteString",    [0x0000],    "00"),
             ("bytestring", "Foo", "takeByteStringx", [0,   "23"],   ""),
             ("bytestring", "Foo", "takeByteStringx", [1, "2345"], "23"),
             ("bytestring", "Foo", "takeByteStringx", [0,  ""],      ""),
@@ -145,9 +145,11 @@ def generate_tests(type):
 
             ("bytestring", "Foo", "dropByteStringx", [0,   "23"], "23"),
             ("bytestring", "Foo", "dropByteStringx", [1, "2345"], "45"),
+            ("bytestring", "Foo", "dropByteStringx", [1, "2300"], "00"),
             ("bytestring", "Foo", "dropByteStringx", [0,  ""],      ""),
             ("bytestring", "Foo", "dropByteStringx", [2,  ""], ExitCode_TakeFromEmpty),
 
+            ("bytestring", "Foo", "toByteStringAndDrop", [1, 0],  "00"),
            ]
 
     if type == 'translation':
