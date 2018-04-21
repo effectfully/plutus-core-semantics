@@ -58,31 +58,17 @@ module PLUTUS-CORE-EXECUTION
   rule #stringToModName(S:String) => #parseToken("UpperName", S)
   rule #stringToCon(S:String)     => #parseToken("UpperName", S)
 
-  syntax Prim ::= "#primTrue" | "#primFalse"
-  rule #primTrue
+  syntax Tm ::= #primBool(Bool)                                       [function]
+  rule #primBool(true)
     => #conHolder(#stringToModName("Prelude"), #stringToCon("True"))
-  rule #primFalse
+  rule #primBool(true)
     => #conHolder(#stringToModName("Prelude"), #stringToCon("False"))
 
-  rule ( builtin equalsInteger I:Int I:Int              ) => #primTrue
-  rule ( builtin equalsInteger I1:Int I2:Int            ) => #primFalse
-    when I1 =/=Int I2
-  rule ( builtin lessThanInteger I1:Int I2:Int          ) => #primTrue
-    when I1 <Int I2
-  rule ( builtin lessThanInteger I1:Int I2:Int          ) => #primFalse
-    when notBool (I1 <Int I2)
-  rule ( builtin lessThanEqualsInteger I1:Int I2:Int    ) => #primTrue
-    when I1 <=Int I2
-  rule ( builtin lessThanEqualsInteger I1:Int I2:Int    ) => #primFalse
-    when notBool (I1 <=Int I2)
-  rule ( builtin greaterThanInteger I1:Int I2:Int       ) => #primTrue
-    when I1 >Int I2
-  rule ( builtin greaterThanInteger I1:Int I2:Int       ) => #primFalse
-    when notBool (I1 >Int I2)
-  rule ( builtin greaterThanEqualsInteger I1:Int I2:Int ) => #primTrue
-    when I1 >=Int I2
-  rule ( builtin greaterThanEqualsInteger I1:Int I2:Int ) => #primFalse
-    when notBool (I1 >=Int I2)
+  rule (builtin equalsInteger            I1:Int I2:Int) => #primBool(I1 ==Int I2)
+  rule (builtin lessThanInteger          I1:Int I2:Int) => #primBool(I1  <Int I2)
+  rule (builtin lessThanEqualsInteger    I1:Int I2:Int) => #primBool(I1 <=Int I2)
+  rule (builtin greaterThanInteger       I1:Int I2:Int) => #primBool(I1  >Int I2)
+  rule (builtin greaterThanEqualsInteger I1:Int I2:Int) => #primBool(I1 >=Int I2)
 
   rule ( builtin integerToByteString 0 )    => #toByStr("0")
   rule ( builtin integerToByteString I:Int) => #toByStr(#toHex(I))
@@ -111,10 +97,7 @@ module PLUTUS-CORE-EXECUTION
 //  rule ( builtin sha2_256 B:ByStr ) => #toByStr(Sha256(#toString(B)))
 
   rule ( builtin equalsByteString B1:ByStr B2:ByStr )
-    => #primTrue when #toString(B1) ==String #toString(B2)
-
-  rule ( builtin equalsByteString B1:ByStr B2:ByStr )
-    => #primFalse when #toString(B1) =/=String #toString(B2)
+    => #primBool(#toString(B1) ==String #toString(B2))
 
   /***************************************************************************/
   /************************   LOCAL REDUCTIONS   *****************************/
