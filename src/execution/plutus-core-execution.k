@@ -65,10 +65,8 @@ module PLUTUS-CORE-EXECUTION
     => #conHolder(#stringToModName("Prelude"), #stringToCon("False"))
 
   rule ( builtin equalsInteger I:Int I:Int              ) => #primTrue
-    [transition]
   rule ( builtin equalsInteger I1:Int I2:Int            ) => #primFalse
     when I1 =/=Int I2
-    [transition]
   rule ( builtin lessThanInteger I1:Int I2:Int          ) => #primTrue
     when I1 <Int I2
   rule ( builtin lessThanInteger I1:Int I2:Int          ) => #primFalse
