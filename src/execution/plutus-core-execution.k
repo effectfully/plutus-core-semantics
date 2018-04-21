@@ -61,7 +61,7 @@ module PLUTUS-CORE-EXECUTION
   syntax Tm ::= #primBool(Bool)                                       [function]
   rule #primBool(true)
     => #conHolder(#stringToModName("Prelude"), #stringToCon("True"))
-  rule #primBool(true)
+  rule #primBool(false)
     => #conHolder(#stringToModName("Prelude"), #stringToCon("False"))
 
   rule (builtin equalsInteger            I1:Int I2:Int) => #primBool(I1 ==Int I2)
