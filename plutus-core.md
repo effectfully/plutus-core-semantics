@@ -93,11 +93,38 @@ Configuration
 
 ```k
 module PLUTUS-CORE-CONFIGURATION
-
     imports PLUTUS-CORE-COMMON
-    configuration <k> $PGM </k>
+    imports DOMAINS
+
+    configuration <k> $PGM:Term </k>
+                  <env> .Map </env>
+                  <store> .Map </store>
 
     syntax KResult    ::= Error
+endmodule
+```
+
+Lambda Calculus
+---------------
+
+```k
+module PLUTUS-CORE-LAMBDA-CALCULUS
+    imports PLUTUS-CORE-CONFIGURATION
+
+    syntax Closure ::= closure(Map, Var, Term)
+    syntax Term    ::= Closure
+    syntax KResult ::= Closure
+
+    rule <k> (lam X _:TyValue M:Term) => closure(RHO, X, M) ... </k>
+         <env> RHO </env>
+    rule <k> [closure(RHO, X, M) V] => M ~> RHO' ... </k>
+         <env> RHO' => RHO[X <- !N] </env>
+         <store> ...  .Map => (!N:Int |-> V) ... </store>
+    rule <k> X:Var => V ... </k>
+         <env> ... X |-> N ... </env>
+         <store> ... N |-> V ... </store>
+    rule <k> _:KResult ~> (RHO:Map => .) ... </k>
+         <env> _ => RHO </env>
 endmodule
 ```
 
@@ -157,6 +184,7 @@ Main Module
 
 ```k
 module PLUTUS-CORE
+    imports PLUTUS-CORE-LAMBDA-CALCULUS
     imports PLUTUS-CORE-ARITHMETIC
 endmodule
 ```
