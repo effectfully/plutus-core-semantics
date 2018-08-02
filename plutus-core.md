@@ -38,6 +38,7 @@ module PLUTUS-CORE-COMMON
                            | "greaterThanInteger" | "greaterThanEqualsInteger"
                            | "equalsInteger"
                            | "resizeInteger"
+                           | "concatenate"
 
     syntax Size          ::= Int // TODO: This should not allow negative integers
     syntax Version       ::= r"[0-9]+(.[0-9]+)*"                                            [token]
@@ -149,13 +150,11 @@ Bounded Integer Arithmetic
 --------------------------
 
 ```k
-module PLUTUS-CORE-ARITHMETIC
+module PLUTUS-CORE-INTEGER
     imports PLUTUS-CORE-CONFIGURATION
-    syntax KResult      ::= Error
 
     syntax BoundedInt ::= int(Int , Int)
-    syntax Size ::= size(Int)                                                [klabel(sizeConstant)]
-                                                      /* klabel prevents conflict with size(Set) */
+    syntax Size ::= size(Int) [klabel(sizeConstant)] /* klabel prevents conflict with size(Set) */
     syntax ResultTerm ::= BoundedInt | Size
 
     rule (con S:Int ! V:Int) => int(S, V)
@@ -164,6 +163,13 @@ module PLUTUS-CORE-ARITHMETIC
       requires -2 ^Int(8 *Int S:Int -Int 1)  >Int V orBool  V >=Int 2 ^Int(8 *Int S:Int -Int 1)
 
     rule (con S:Int) => size(S)
+endmodule
+
+module PLUTUS-CORE-BUILTINS
+    imports PLUTUS-CORE-INTEGER
+    imports PLUTUS-CORE-BYTESTRING
+
+    syntax KResult ::= Error
 
     syntax CurriedBuiltinResult ::= curried(BinaryBuiltin)
                                   | curriedArg(BinaryBuiltin, ResultTerm)
@@ -304,8 +310,7 @@ Main Module
 ```k
 module PLUTUS-CORE
     imports PLUTUS-CORE-LAMBDA-CALCULUS
-    imports PLUTUS-CORE-ARITHMETIC
-    imports PLUTUS-CORE-BYTESTRING
+    imports PLUTUS-CORE-BUILTINS
     imports PLUTUS-CORE-TYPE-ERASURE
 endmodule
 ```
