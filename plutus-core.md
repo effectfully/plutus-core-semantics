@@ -241,20 +241,19 @@ module PLUTUS-CORE-BYTESTRING
     imports BYTES
 
     syntax Term ::= #bytestring(Int, String)
-                  | #bytestring(Int, Int, Bytes)
+                  | #bytestringBytes(Int, Int, Bytes)
     syntax ResultTerm ::= bytestring(Int, Bytes)
-    syntax String ::= ByteString2String(ByteString)           [function, hook(STRING.token2string)]
+    syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
     
     rule (con S ! BS:ByteString) => #bytestring(S, replaceFirst(ByteString2String(BS), "`", ""))
     rule #bytestring(S, STR:String)
-      => #bytestring( S
-                    , (lengthString(STR) +Int 1) /Int 2
-                    , Int2Bytes(String2Base(STR, 16) , LE, Unsigned))
+      => #bytestringBytes( S
+                         , (lengthString(STR) +Int 1) /Int 2
+                         , Int2Bytes(String2Base(STR, 16) , LE, Unsigned))
                     
-    rule #bytestring(S, L, B) => (error (con (bytestring)))
-      when S <Int L
-//    rule <k> #bytestring(S, L, B) => (error (con (bytestring))) </k>
-//      when S <Int L
+    rule #bytestringBytes(S, L, B) => (error (con (bytestring)))
+      requires S <Int L
+
 //    rule #bytestring(S, L, B:Bytes) => bytestring(S, padLeftBytes(B, L -Int lengthBytes(B), 0))
 //    rule #bytestring(S:Int, L:Int, B:Bytes) => bytestring(S, B)
 //      when S >=Int L
