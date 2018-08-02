@@ -205,6 +205,23 @@ rule  <k> [[ [[(con equalsInteger) (con 3 ! 3)] (con 3 ! 2)]
      <store> .Map => _ </store> [specification]
 ```
 
+Bytestrings
+-----------
+
+```k
+rule <k> (con 2 ! `0 )               => bytestring(2,     0 : nilBytes) </k>
+//rule <k> (con 2 ! `00 )              => bytestring(2,     0 : nilBytes) </k>
+//rule <k> (con 2 ! `0000 )            => bytestring(2, 0 : 0 : nilBytes) </k>
+//rule <k> (con 2 ! `00000 )           => (error (bytestring)) </k>
+rule <k> (con 2 ! `10000 )           => (error (con (bytestring))) </k>
+//rule <k> (con 8 ! `0123456789abcdef) => bytestring(8, 239 : 205 : 171 : 137 : 103 : 69 : 35 : 1 : nilBytes) </k>
+
+// rule <k> [[[(con concatenate) (con 1)] (con 2 ! #0000)] (con 2 ! #0000)]
+//       => bytestring(4, 0 : 0 : 0 : 0)
+//     </k>  [specification]
+```
+
+
 ```k
 endmodule
 ```
