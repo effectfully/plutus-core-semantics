@@ -226,7 +226,6 @@ module PLUTUS-CORE-ARITHMETIC
     rule [curriedArg(equalsInteger, int(S, V1)) int(S, V2)] => #false
       requires V1 =/=Int V2
 
-    // BinaryBuiltins
     // resizeInteger builtin
     rule [curriedArg(resizeInteger, size(S1)) int(S2, V)] => (con S1 ! V)
 endmodule
