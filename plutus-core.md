@@ -254,9 +254,8 @@ module PLUTUS-CORE-BYTESTRING
     rule #bytestringBytes(S, L, B) => (error (con (bytestring)))
       requires S <Int L
 
-//    rule #bytestring(S, L, B:Bytes) => bytestring(S, padLeftBytes(B, L -Int lengthBytes(B), 0))
-//    rule #bytestring(S:Int, L:Int, B:Bytes) => bytestring(S, B)
-//      when S >=Int L
+    rule #bytestringBytes(S, L, B:Bytes) => bytestring(S, padLeftBytes(B, L -Int lengthBytes(B), 0))
+      requires S >=Int L
 endmodule
 ```
 

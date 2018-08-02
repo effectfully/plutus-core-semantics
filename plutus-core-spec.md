@@ -209,12 +209,12 @@ Bytestrings
 -----------
 
 ```k
-//rule <k> (con 2 ! `0 )               => bytestring(2,     0 : nilBytes) </k>
-//rule <k> (con 2 ! `00 )              => bytestring(2,     0 : nilBytes) </k>
-//rule <k> (con 2 ! `0000 )            => bytestring(2, 0 : 0 : nilBytes) </k>
+rule <k> (con 2 ! `0 )               => bytestring(2,     0 : nilBytes) </k>
+rule <k> (con 2 ! `00 )              => bytestring(2,     0 : nilBytes) </k>
+rule <k> (con 2 ! `0000 )            => bytestring(2, 0 : 0 : nilBytes) </k>
 rule <k> (con 2 ! `00000 )           => (error (con (bytestring))) </k>
 rule <k> (con 2 ! `10000 )           => (error (con (bytestring))) </k>
-//rule <k> (con 8 ! `0123456789abcdef) => bytestring(8, 239 : 205 : 171 : 137 : 103 : 69 : 35 : 1 : nilBytes) </k>
+rule <k> (con 8 ! `0123456789abcdef) => bytestring(8, 239 : 205 : 171 : 137 : 103 : 69 : 35 : 1 : nilBytes) </k>
 
 // rule <k> [[[(con concatenate) (con 1)] (con 2 ! #0000)] (con 2 ! #0000)]
 //       => bytestring(4, 0 : 0 : 0 : 0)
