@@ -146,28 +146,14 @@ module PLUTUS-CORE-LAMBDA-CALCULUS
 endmodule
 ```
 
-Bounded Integer Arithmetic
---------------------------
+Builtins
+--------
+
+Common infrastructure for handling builtins.
 
 ```k
-module PLUTUS-CORE-INTEGER
-    imports PLUTUS-CORE-CONFIGURATION
-
-    syntax BoundedInt ::= int(Int , Int)
-    syntax Size ::= size(Int) [klabel(sizeConstant)] /* klabel prevents conflict with size(Set) */
-    syntax ResultTerm ::= BoundedInt | Size
-
-    rule (con S:Int ! V:Int) => int(S, V)
-      requires -2 ^Int(8 *Int S:Int -Int 1) <=Int V andBool V  <Int 2 ^Int(8 *Int S:Int -Int 1)
-    rule (con S:Int ! V:Int) => (error (con (integer)))
-      requires -2 ^Int(8 *Int S:Int -Int 1)  >Int V orBool  V >=Int 2 ^Int(8 *Int S:Int -Int 1)
-
-    rule (con S:Int) => size(S)
-endmodule
-
 module PLUTUS-CORE-BUILTINS
-    imports PLUTUS-CORE-INTEGER
-    imports PLUTUS-CORE-BYTESTRING
+    imports PLUTUS-CORE-CONFIGURATION
 
     syntax KResult ::= Error
 
@@ -178,11 +164,37 @@ module PLUTUS-CORE-BUILTINS
                             | curriedArg(BinaryBuiltin, Term)                    [strict(2)]
     syntax Term           ::= CurriedBuiltin
 
+    syntax Size ::= size(Int) [klabel(sizeConstant)] /* klabel prevents conflict with size(Set) */
+    syntax ResultTerm ::= Size
+    rule (con S:Int) => size(S)
+
     // BinaryBuiltins
     rule (con B:BinaryBuiltin)                        => curried(B)
     rule [curried(B:BinaryBuiltin) TM]                => curriedArg(B, TM)
     rule [curriedArg(B:BinaryBuiltin, (error TY)) TM] => (error TY)
     rule [curriedArg(B:BinaryBuiltin, TM) (error TY)] => (error TY)
+endmodule
+```
+
+Bounded Integer Arithmetic
+--------------------------
+
+```k
+module PLUTUS-CORE-BOUNDED-INTEGERS
+    imports PLUTUS-CORE-CONFIGURATION
+
+    syntax BoundedInt ::= int(Int , Int)
+    syntax ResultTerm ::= BoundedInt
+
+    rule (con S:Int ! V:Int) => int(S, V)
+      requires -2 ^Int(8 *Int S:Int -Int 1) <=Int V andBool V  <Int 2 ^Int(8 *Int S:Int -Int 1)
+    rule (con S:Int ! V:Int) => (error (con (integer)))
+      requires -2 ^Int(8 *Int S:Int -Int 1)  >Int V orBool  V >=Int 2 ^Int(8 *Int S:Int -Int 1)
+endmodule
+
+module PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
+    imports PLUTUS-CORE-BOUNDED-INTEGERS
+    imports PLUTUS-CORE-BUILTINS
 
     // addInteger builtin
     rule [curriedArg(addInteger, int(S, V1)) int(S, V2)] => (con S ! (V1 +Int V2))
@@ -234,17 +246,6 @@ module PLUTUS-CORE-BUILTINS
 
     // resizeInteger builtin
     rule [curriedArg(resizeInteger, size(S1)) int(S2, V)] => (con S1 ! V)
-
-    // intToByteString builtin
-    rule [curriedArg(intToByteString, size(S1)) int(S2, V)] => #toByteString((con S1 ! V), S1 -Int S2)
-
-    syntax ByteString ::= #toByteString(Term, Int) [strict(1), function]
-    rule #toByteString((error TY), _) => (error (con (bytestring)))
-    rule #toByteString(int(S, V), PAD) => bytestring(S, padRightBytes(Int2Bytes(V, LE, Signed), PAD, 0))
-      requires PAD >Int 0
-    rule #toByteString(int(S, V), PAD) => bytestring(S, Int2Bytes(V, BE, Signed))
-      requires PAD <=Int 0
-
 endmodule
 ```
 
@@ -252,26 +253,36 @@ Bytestrings
 -----------
 
 ```k
-module PLUTUS-CORE-BYTESTRING
-    imports PLUTUS-CORE-CONFIGURATION
+module PLUTUS-CORE-BYTESTRINGS
+    imports PLUTUS-CORE-BOUNDED-INTEGERS
+    imports PLUTUS-CORE-BUILTINS
     imports BYTES
 
     syntax Term ::= #bytestring(Int, String)
                   | #bytestringBytes(Int, Int, Bytes)
     syntax ResultTerm ::= bytestring(Int, Bytes)
     syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
-    
+
     rule (con S ! BS:ByteString) => #bytestring(S, replaceFirst(ByteString2String(BS), "`", ""))
     rule #bytestring(S, STR:String)
       => #bytestringBytes( S
                          , (lengthString(STR) +Int 1) /Int 2
                          , Int2Bytes(String2Base(STR, 16) , LE, Unsigned))
-                    
     rule #bytestringBytes(S, L, B) => (error (con (bytestring)))
       requires S <Int L
-
     rule #bytestringBytes(S, L, B:Bytes) => bytestring(S, padLeftBytes(B, L -Int lengthBytes(B), 0))
       requires S >=Int L
+
+    // intToByteString builtin
+    rule [curriedArg(intToByteString, size(S1)) int(S2, V:Int)]
+      => #toByteString((con S1 ! V), S1 -Int S2)
+
+    syntax ByteString ::= #toByteString(Term, Int) [strict(1), function]
+    rule #toByteString((error TY), _) => (error (con (bytestring)))
+    rule #toByteString(int(S, V), PAD) => bytestring(S, padRightBytes(Int2Bytes(V, LE, Signed), PAD, 0))
+      requires PAD >Int 0
+    rule #toByteString(int(S, V), PAD) => bytestring(S, Int2Bytes(V, BE, Signed))
+      requires PAD <=Int 0
 endmodule
 ```
 
@@ -320,7 +331,8 @@ Main Module
 ```k
 module PLUTUS-CORE
     imports PLUTUS-CORE-LAMBDA-CALCULUS
-    imports PLUTUS-CORE-BUILTINS
+    imports PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
+    imports PLUTUS-CORE-BYTESTRINGS
     imports PLUTUS-CORE-TYPE-ERASURE
 endmodule
 ```
