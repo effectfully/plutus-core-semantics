@@ -290,7 +290,7 @@ rule <k> [[(con equalsByteString) (con 3 ! `abcde)]
 
 rule <k> [[(con equalsByteString) (con 3 ! `abcd)]
                                   (con 3 ! `abcd)]
-      => #false </k>                                                                [specification]
+      => #true </k>                                                                 [specification]
 
 rule <k> [[(con equalsByteString) (con 1 ! `abcd)]
                                   (con 1 ! `abcd)]
