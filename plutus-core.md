@@ -363,6 +363,14 @@ module PLUTUS-CORE-ABBREVIATIONS
                   | "#false" [macro]
     rule #true => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [t #unitval])))
     rule #false => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [f #unitval])))
+
+    syntax TyValue ::= "(" "dummyTy" ")"
+
+    syntax Term ::= "#if" [macro]
+    rule #if => (lam x (dummyTy) (lam t (dummyTy) (lam f (dummyTy) [[x t] f])))
+
+    syntax Term ::= "#ycomb"  [macro]
+    rule #ycomb => (lam f (dummyTy) [(lam x (dummyTy) [f [x x]]) (lam x (dummyTy) [f [x x]])])
 endmodule
 ```
 
