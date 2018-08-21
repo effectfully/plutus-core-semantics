@@ -90,6 +90,11 @@ module PLUTUS-CORE-COMMON
                   | "(" "size" ")"
 
     syntax Program ::= "(" "version" Version Term ")"
+
+    syntax TyValue ::= "(" "dummyTy" ")"
+    syntax Term ::= "#ycomb"  [macro]
+    syntax Term ::= "#if" [macro]
+
 endmodule
 ```
 
@@ -351,7 +356,12 @@ module PLUTUS-CORE-ABBREVIATIONS
     imports PLUTUS-CORE-COMMON
 
     syntax TyVar ::= "alpha"
+
+    // Variables for if, booleans
     syntax Var ::= "t" | "f" | "x"
+
+    // Variables for Y combinator
+    syntax Var ::= "yf" | "yx"
 
     syntax TyValue ::= "#unit" [macro]
     rule #unit => (all alpha (type) (fun alpha alpha))
@@ -364,13 +374,9 @@ module PLUTUS-CORE-ABBREVIATIONS
     rule #true => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [t #unitval])))
     rule #false => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [f #unitval])))
 
-    syntax TyValue ::= "(" "dummyTy" ")"
-
-    syntax Term ::= "#if" [macro]
     rule #if => (lam x (dummyTy) (lam t (dummyTy) (lam f (dummyTy) [[x t] f])))
 
-    syntax Term ::= "#ycomb"  [macro]
-    rule #ycomb => (lam f (dummyTy) [(lam x (dummyTy) [f [x x]]) (lam x (dummyTy) [f [x x]])])
+    rule #ycomb => (lam yf (dummyTy) [(lam yx (dummyTy) [yf [yx yx]]) (lam yx (dummyTy) [yf [yx yx]])])
 endmodule
 ```
 

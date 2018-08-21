@@ -297,6 +297,23 @@ rule <k> [[(con equalsByteString) (con 1 ! `abcd)]
       => (error (con (bytestring))) </k>                                            [specification]
 ```
 
+Recursion
+---------
+
+```comment
+// Infinite loops currently
+rule <k> [[#ycomb
+           (lam f (dummyTy)
+             (lam x (dummyTy)
+               [[[#if [[(con equalsInteger) x] (con 3 ! 0)]]
+                 (con 3 ! 1)]
+                 [[(con multiplyInteger) x] [[(con subtractInteger) x] (con 3 ! 1)]]]
+             )
+           )
+         ] (con 3 ! 0)]
+      => int(3, 0) </k>                                                             [specification]
+```
+
 ```k
 endmodule
 ```
