@@ -91,9 +91,12 @@ module PLUTUS-CORE-COMMON
 
     syntax Program ::= "(" "version" Version Term ")"
 
+    // These should be with other macros
     syntax TyValue ::= "(" "dummyTy" ")"
     syntax Term ::= "#ycomb"  [macro]
-    syntax Term ::= "#if" [macro]
+    syntax Term ::= "#case" [macro]
+    syntax Term ::= "#true" [macro]
+    syntax Term ::= "#false" [macro]
 
 endmodule
 ```
@@ -150,6 +153,12 @@ module PLUTUS-CORE-LAMBDA-CALCULUS
          <store> ... N |-> V ... </store>
     rule <k> _:KResult ~> (RHO:Map => .) ... </k>
          <env> _ => RHO </env>
+
+    syntax K ::= #appHolder(K)
+    rule [ V:Term Y:Term ] => Y ~> #appHolder(V)
+      requires isKResult(V) andBool notBool isKResult(Y)
+    rule V2:Term ~> #appHolder(V1) => [ V1 V2 ]
+      requires isKResult(V2)
 endmodule
 ```
 
@@ -357,8 +366,17 @@ module PLUTUS-CORE-ABBREVIATIONS
 
     syntax TyVar ::= "alpha"
 
-    // Variables for if, booleans
-    syntax Var ::= "t" | "f" | "x"
+    // Variables for case
+    syntax Var ::= "cx" | "cb" | "ct" | "cf"
+
+    // Variables for true
+    syntax Var ::= "tt" | "tf" | "tx"
+
+    // Variables for false
+    syntax Var ::= "ft" | "ff" | "fx"
+
+    // Variable for unitval
+    syntax Var ::= "ux"
 
     // Variables for Y combinator
     syntax Var ::= "yf" | "yx"
@@ -367,14 +385,12 @@ module PLUTUS-CORE-ABBREVIATIONS
     rule #unit => (all alpha (type) (fun alpha alpha))
 
     syntax Term ::= "#unitval" [macro]
-    rule #unitval => (abs alpha (type) (lam x alpha x))
+    rule #unitval => (abs alpha (type) (lam ux alpha ux))
 
-    syntax Term ::= "#true"  [macro]
-                  | "#false" [macro]
-    rule #true => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [t #unitval])))
-    rule #false => (abs alpha (type) (lam t (fun #unit alpha) (lam f (fun #unit alpha) [f #unitval])))
+    rule #true  => (abs alpha (type) (lam tt (fun #unit alpha) (lam tf (fun #unit alpha) [tt #unitval])))
+    rule #false => (abs alpha (type) (lam ft (fun #unit alpha) (lam ff (fun #unit alpha) [ff #unitval])))
 
-    rule #if => (lam x (dummyTy) (lam t (dummyTy) (lam f (dummyTy) [[x t] f])))
+    rule #case => (abs alpha (type) (lam cb (dummyTy) (lam ct alpha (lam cf alpha [[cb (lam cx #unit ct)] (lam cx #unit cf) ]))))
 
     rule #ycomb => (lam yf (dummyTy) [(lam yx (dummyTy) [yf [yx yx]]) (lam yx (dummyTy) [yf [yx yx]])])
 endmodule

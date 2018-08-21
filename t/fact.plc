@@ -1,0 +1,9 @@
+ [[#ycomb 
+           (lam fact (dummyTy) 
+             (lam n (dummyTy) 
+               [[[#if [[(con equalsInteger) n] (con 3 ! 0)]]
+                 (con 3 ! 1)]
+                 [[(con multiplyInteger) n] [[(con subtractInteger) n] (con 3 ! 1)]]]
+             )
+           )
+         ] (con 3 ! 0)]

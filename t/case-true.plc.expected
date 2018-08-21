@@ -1,0 +1,21 @@
+<generatedTop>
+  <k>
+    int ( 1 , 1 )
+  </k>
+  <env>
+    .Map
+  </env>
+  <store>
+    0 |-> closure ( .Map , tt , ( lam tf ( fun #unit alpha ) [ tt #unitval ] ) )
+    1 |-> int ( 1 , 1 )
+    2 |-> int ( 1 , 2 )
+    3 |-> closure ( cb |-> 0
+    cf |-> 2
+    ct |-> 1 , cx , ct )
+    4 |-> closure ( cb |-> 0
+    cf |-> 2
+    ct |-> 1 , cx , cf )
+    5 |-> closure ( tf |-> 4
+    tt |-> 3 , ux , ux )
+  </store>
+</generatedTop>
