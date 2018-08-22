@@ -75,3 +75,4 @@ build .build/t/case-false.plc.ocaml.test : check-test-result .build/t/case-false
 # -------
 
 build spec-ocaml : phony $builddir/plutus-core-ocaml/plutus-core-kompiled/timestamp
+build spec-java  : phony $builddir/plutus-core-java/plutus-core-kompiled/timestamp
