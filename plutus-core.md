@@ -93,7 +93,8 @@ module PLUTUS-CORE-COMMON
 
     // These should be with other macros
     syntax TyValue ::= "(" "dummyTy" ")"
-    syntax Term ::= "#ycomb"  [macro]
+    syntax Term ::= "#theta"  [macro]
+    syntax Term ::= "#zcomb"  [macro]
     syntax Term ::= "#case" [macro]
     syntax Term ::= "#true" [macro]
     syntax Term ::= "#false" [macro]
@@ -384,8 +385,11 @@ module PLUTUS-CORE-ABBREVIATIONS
     // Variable for unitval
     syntax Var ::= "ux"
 
-    // Variables for Y combinator
-    syntax Var ::= "yf" | "yx"
+    // Variables for Z combinator
+    syntax Var ::= "zf" | "zx" | "zv"
+
+    // Variables for Theta combinator
+    syntax Var ::= "thx" | "thy"
 
     syntax TyValue ::= "#unit" [macro]
     rule #unit => (all alpha (type) (fun alpha alpha))
@@ -398,7 +402,8 @@ module PLUTUS-CORE-ABBREVIATIONS
 
     rule #case => (abs alpha (type) (lam cb (dummyTy) (lam ct alpha (lam cf alpha [[cb (lam cx #unit ct)] (lam cx #unit cf)]))))
 
-    rule #ycomb => (lam yf (dummyTy) [(lam yx (dummyTy) [yf [yx yx]]) (lam yx (dummyTy) [yf [yx yx]])])
+    rule #theta => [ (lam thx (dummyTy) (lam thy (dummyTy) [thy [[thx thx] thy]])) (lam thx (dummyTy) (lam thy (dummyTy) [thy [[thx thx] thy]])) ]
+    rule #zcomb => (lam zf (dummyTy) [(lam zx (dummyTy) [zf (lam zv (dummyTy) [[zx zx] zv])]) (lam zx (dummyTy) [zf (lam zv (dummyTy) [[zx zx] zv])])])
 endmodule
 ```
 
