@@ -1,0 +1,11 @@
+(program 0.1.0
+
+  [[#plfix
+   (lam sum (dummyTy) (lam n (dummyTy)
+     [[[(lam cb (dummyTy) (lam ct (dummyTy) (lam cf (dummyTy) [[cb (lam cx (dummyTy) ct)] (lam cx (dummyTy) cf)])))
+         [[(con greaterThanEqualsInteger) (con 2 ! 0)] n]]
+         (con 2 ! 0)]
+         [[(con addInteger) n] [sum [[(con subtractInteger) n] (con 2 ! 1)]]]]))]
+   (con 2 ! 0)])
+
+//   [[(lam x (dummyTy) [#sum [x x]]) (lam x (dummyTy) [#sum [x x]])] (con 2 ! 0)])

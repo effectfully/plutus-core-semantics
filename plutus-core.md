@@ -58,7 +58,7 @@ module PLUTUS-CORE-COMMON
                   // wrapping a value should be a value
                   | "(" "wrap" TyVar TyValue Term ")"
                   | "(" "unwrap" Term ")"
-                  | "[" Term Term "]"                                                   [seqstrict]
+                  | "[" Term Term "]"                                                   [strict(1)]
                   | Error
                   | Value
     syntax Error ::= "(" "error" Type ")"
@@ -190,6 +190,7 @@ module PLUTUS-CORE-BUILTINS
     syntax ResultTerm     ::= CurriedBuiltinResult
     syntax CurriedBuiltin ::= CurriedBuiltinResult
                             | curriedArg(BinaryBuiltin, Term)                    [strict(2)]
+                            | curriedArg(BinaryBuiltin, Term, Term)            [strict(2,3)]
     syntax Term           ::= CurriedBuiltin
 
     syntax Size ::= size(Int) [klabel(sizeConstant)] /* klabel prevents conflict with size(Set) */
@@ -400,7 +401,7 @@ module PLUTUS-CORE-ABBREVIATIONS
     syntax Var ::= "thx" | "thy"
 
     // Variables for Plutus fp combinator
-    syntax Var ::= "plf" | "plx" | "pls"
+    syntax Var ::= "plf" | "plx" | "pls" | "plt"
 
     syntax TyValue ::= "#unit" [macro]
     rule #unit => (all alpha (type) (fun alpha alpha))
@@ -419,14 +420,22 @@ module PLUTUS-CORE-ABBREVIATIONS
     syntax Var ::= "sum" | "n"
 
     rule #sum =>
-      (lam sum (dummyTy) (lam n (dummyTy)
+      (lam n (dummyTy)
         [[[#case
            [[(con greaterThanEqualsInteger) (con 2 ! 0)] n]]
            (con 2 ! 0)]
-           [[(con addInteger) n] [sum [[(con subtractInteger) n] (con 2 ! 1)]]]]))
+           [[(con addInteger) n] [sum [[(con subtractInteger) n] (con 2 ! 1)]]]])
 
     rule #plfix => (lam plf (dummyTy) [ (lam pls (dummyTy) [ pls pls ])
-                                        (lam pls (dummyTy) (lam plx (dummyTy) [ [ plf [ (lam pls (dummyTy) [ pls pls ]) pls ] ] plx ])) ] )
+                                        (lam pls (dummyTy) (lam plx (dummyTy) [ [ plf [ (lam plt (dummyTy) [ plt plt ]) pls ] ] plx ])) ] )
+
+// lam f [ (lam s [ s s ]) (lam s (lam x [ [ f [ (lam t [ t t ]) s ] ] x ] )) ]
+// [ (lam s [ s s ]) (lam s (lam x [ [ sum [ (lam t [ t t ]) s ] ] x ] )) ]
+// [ (lam s (lam x [ [ sum [ (lam t [ t t ]) s ] ] x ] )) (lam s (lam x [ [ sum [ (lam t [ t t ]) s ] ] x ] )) ]
+// (lam x [ [ sum [ (lam t [ t t ]) (lam s (lam x [ [ sum [ (lam t [ t t ]) s ] ] x ] )) ] ] x ]
+// 
+
+
 endmodule
 ```
 
