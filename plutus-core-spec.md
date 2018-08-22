@@ -300,10 +300,11 @@ rule <k> [[(con equalsByteString) (con 1 ! `abcd)]
 Case
 ----
 
-```k
-// rule <k> [[#true (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 3) </k> [specification]
-// rule <k> [[[#case #true] (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 3) </k>              [specification]
-// rule <k> [[[#case #false] (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 3) </k>              [specification]
+These tests currently fail due to a bug in the Java backend
+```TODO:
+rule <k> [[#true (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 3) </k>                      [specification]
+rule <k> [[[#case #true] (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 1) </k>              [specification]
+rule <k> [[[#case #false] (con 1 ! 1)] (con 1 ! 2)] => (con 1 ! 2) </k>             [specification]
 ```
 
 Recursion
