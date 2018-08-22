@@ -390,7 +390,7 @@ module PLUTUS-CORE-ABBREVIATIONS
     rule #true  => (abs alpha (type) (lam tt (fun #unit alpha) (lam tf (fun #unit alpha) [tt #unitval])))
     rule #false => (abs alpha (type) (lam ft (fun #unit alpha) (lam ff (fun #unit alpha) [ff #unitval])))
 
-    rule #case => (abs alpha (type) (lam cb (dummyTy) (lam ct alpha (lam cf alpha [[cb (lam cx #unit ct)] (lam cx #unit cf) ]))))
+    rule #case => (abs alpha (type) (lam cb (dummyTy) (lam ct alpha (lam cf alpha [[cb (lam cx #unit ct)] (lam cx #unit cf)]))))
 
     rule #ycomb => (lam yf (dummyTy) [(lam yx (dummyTy) [yf [yx yx]]) (lam yx (dummyTy) [yf [yx yx]])])
 endmodule
