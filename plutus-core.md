@@ -73,7 +73,7 @@ module PLUTUS-CORE-COMMON
                   | "(" "fun" Type Type ")"
                   | "(" "all" TyVar Kind Type ")"
                   | "(" "fix" TyVar Type ")"
-                  | "[" Type Type "]"
+  //                | "[" Type Type "]"
                   | TyValue
 
     syntax TyValue ::= "(" "rec" TyValue ")"
@@ -85,7 +85,7 @@ module PLUTUS-CORE-COMMON
                      | NeutralTy
 
     syntax NeutralTy ::= TyVar
-                       | "[" NeutralTy TyValue "]"
+//                       | "[" NeutralTy TyValue "]"
 
     syntax Kind ::= "(" "type" ")"
                   | "(" "fun" Kind Kind ")"
@@ -97,9 +97,12 @@ module PLUTUS-CORE-COMMON
     syntax TyValue ::= "(" "dummyTy" ")"
     syntax Term ::= "#theta"  [macro]
     syntax Term ::= "#zcomb"  [macro]
+    syntax Term ::= "#plfix" [macro]
     syntax Term ::= "#case" [macro]
     syntax Term ::= "#true" [macro]
     syntax Term ::= "#false" [macro]
+
+    syntax Term ::= "#sum" [macro]
 
 endmodule
 ```
@@ -163,11 +166,11 @@ module PLUTUS-CORE-LAMBDA-CALCULUS
     rule <k> _:KResult ~> (RHO:Map => .) ... </k>
          <env> _ => RHO </env>
 
-    syntax K ::= #appHolder(K)
-    rule [ V:Term Y:Term ] => Y ~> #appHolder(V)
-      requires isKResult(V) andBool notBool isKResult(Y)
-    rule V2:Term ~> #appHolder(V1) => [ V1 V2 ]
-      requires isKResult(V2)
+//    syntax K ::= #appHolder(K)
+//    rule [ V:Term Y:Term ] => Y ~> #appHolder(V)
+//      requires isKResult(V) andBool notBool isKResult(Y)
+//    rule V2:Term ~> #appHolder(V1) => [ V1 V2 ]
+//      requires isKResult(V2)
 endmodule
 ```
 
@@ -396,6 +399,9 @@ module PLUTUS-CORE-ABBREVIATIONS
     // Variables for Theta combinator
     syntax Var ::= "thx" | "thy"
 
+    // Variables for Plutus fp combinator
+    syntax Var ::= "plf" | "plx" | "pls"
+
     syntax TyValue ::= "#unit" [macro]
     rule #unit => (all alpha (type) (fun alpha alpha))
 
@@ -409,6 +415,18 @@ module PLUTUS-CORE-ABBREVIATIONS
 
     rule #theta => [ (lam thx (dummyTy) (lam thy (dummyTy) [thy [[thx thx] thy]])) (lam thx (dummyTy) (lam thy (dummyTy) [thy [[thx thx] thy]])) ]
     rule #zcomb => (lam zf (dummyTy) [(lam zx (dummyTy) [zf (lam zv (dummyTy) [[zx zx] zv])]) (lam zx (dummyTy) [zf (lam zv (dummyTy) [[zx zx] zv])])])
+
+    syntax Var ::= "sum" | "n"
+
+    rule #sum =>
+      (lam sum (dummyTy) (lam n (dummyTy)
+        [[[#case
+           [[(con greaterThanEqualsInteger) (con 2 ! 0)] n]]
+           (con 2 ! 0)]
+           [[(con addInteger) n] [sum [[(con subtractInteger) n] (con 2 ! 1)]]]]))
+
+    rule #plfix => (lam plf (dummyTy) [ (lam pls (dummyTy) [ pls pls ])
+                                        (lam pls (dummyTy) (lam plx (dummyTy) [ [ plf [ (lam pls (dummyTy) [ pls pls ]) pls ] ] plx ])) ] )
 endmodule
 ```
 
