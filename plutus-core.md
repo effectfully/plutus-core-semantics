@@ -55,6 +55,9 @@ module PLUTUS-CORE-COMMON
     syntax Term ::= Var
                   | "(" "run" Term ")"
                   | "{" Term TyValue "}"
+                  // wrapping a value should be a value
+                  | "(" "wrap" TyVar TyValue Term ")"
+                  | "(" "unwrap" Term ")"
                   | "[" Term Term "]"                                                   [seqstrict]
                   | Error
                   | Value
@@ -62,7 +65,6 @@ module PLUTUS-CORE-COMMON
 
     syntax Value ::= "(" "fix" Var TyValue Term ")"
                    | "(" "abs" TyVar Kind Value ")"
-                   | "(" "wrap" TyVar TyValue Value ")"
                    | "(" "lam" Var TyValue Term ")"
                    | "(" "con" Constant ")"
 
@@ -358,7 +360,10 @@ erase certain type constructs.
 module PLUTUS-CORE-TYPE-ERASURE
     imports PLUTUS-CORE-CONFIGURATION
 
-    rule (abs TY KI TM) => TM
+    rule { TM TY }        => TM
+    rule (wrap TY TYV TM) => TM
+    rule (unwrap TM)      => TM
+    rule (abs TY KI TM)   => TM
 endmodule
 ```
 
