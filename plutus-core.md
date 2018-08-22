@@ -190,7 +190,7 @@ module PLUTUS-CORE-BUILTINS
     syntax ResultTerm     ::= CurriedBuiltinResult
     syntax CurriedBuiltin ::= CurriedBuiltinResult
                             | curriedArg(BinaryBuiltin, Term)                    [strict(2)]
-                            | curriedArg(BinaryBuiltin, Term, Term)            [strict(2,3)]
+                            | curriedArg1(BinaryBuiltin, Term, Term)            [strict(2,3)]
     syntax Term           ::= CurriedBuiltin
 
     syntax Size ::= size(Int) [klabel(sizeConstant)] /* klabel prevents conflict with size(Set) */
@@ -202,6 +202,7 @@ module PLUTUS-CORE-BUILTINS
     rule [curried(B:BinaryBuiltin) TM]                => curriedArg(B, TM)
     rule [curriedArg(B:BinaryBuiltin, (error TY)) TM] => (error TY)
     rule [curriedArg(B:BinaryBuiltin, TM) (error TY)] => (error TY)
+    rule [curriedArg(B:BinaryBuiltin, TM1) TM2]       => curriedArg1(B, TM1, TM2)
 endmodule
 ```
 
@@ -226,10 +227,10 @@ module PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
     imports PLUTUS-CORE-BUILTINS
 
     // addInteger builtin
-    rule [curriedArg(addInteger, int(S, V1)) int(S, V2)] => (con S ! (V1 +Int V2))
+    rule curriedArg1(addInteger, int(S, V1), int(S, V2)) => (con S ! (V1 +Int V2))
 
     // subtractInteger builtin
-    rule [curriedArg(subtractInteger, int(S, V1)) int(S, V2)] => (con S ! (V1 -Int V2))
+    rule curriedArg1(subtractInteger, int(S, V1), int(S, V2)) => (con S ! (V1 -Int V2))
 
     // multiplyInteger builtin
     rule [curriedArg(multiplyInteger, int(S, V1)) int(S, V2)] => (con S ! (V1 *Int V2))
@@ -263,9 +264,9 @@ module PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
       requires V1 <=Int V2
 
     // greaterThanEqualsInteger builtin
-    rule [curriedArg(greaterThanEqualsInteger, int(S, V1)) int(S, V2)] => #true
+    rule curriedArg1(greaterThanEqualsInteger, int(S, V1), int(S, V2)) => #true
       requires V1 >=Int V2
-    rule [curriedArg(greaterThanEqualsInteger, int(S, V1)) int(S, V2)] => #false
+    rule curriedArg1(greaterThanEqualsInteger, int(S, V1), int(S, V2)) => #false
       requires V1 <Int V2
 
     // equalsInteger builtin
