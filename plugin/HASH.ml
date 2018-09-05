@@ -10,8 +10,7 @@ let do_hash_str: string -> Cryptokit.hash -> Constants.K.kitem list =
 
 let do_hash_bytes: bytes -> Cryptokit.hash -> Constants.K.kitem list =
   fun bytes h ->
-    h#add_substring bytes 0 (Bytes.length bytes);
-    [Bytes (Bytes.of_string h#result)]
+	Bytes.of_string (Cryptokit.hash_string h (Bytes.to_string bytes))
 
 let do_hook: Cryptokit.hash -> string
 	      -> kitem list -> klabel -> sort -> kitem list -> (string -> k -> Z.t -> k) -> kitem list =
