@@ -328,9 +328,7 @@ Bytestring builtins:
       => (error (con (bytestring)))
       requires S1 <Int lengthBytes(B2)
 
-    rule [[(con equalsByteString) bytestring(S, B1)] bytestring(S, B1)] => #true
-    rule [[(con equalsByteString) bytestring(S, B1)] bytestring(S, B2)] => #false
-      requires B1 =/=K B2
+    rule [[(con equalsByteString) bytestring(S, B1)] bytestring(S, B2)] => #mkBool(B1 ==K B2)
 ```
 
 ```k
