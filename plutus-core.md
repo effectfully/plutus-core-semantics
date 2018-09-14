@@ -202,10 +202,6 @@ Bounded Integer Arithmetic
 ```k
 module PLUTUS-CORE-BOUNDED-INTEGERS
     imports PLUTUS-CORE-CONFIGURATION
-endmodule
-
-module PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
-    imports PLUTUS-CORE-BOUNDED-INTEGERS
     imports PLUTUS-CORE-BUILTINS
 
     rule isResultTerm((con S ! I:Int)) => true
@@ -422,7 +418,7 @@ Main Module
 ```k
 module PLUTUS-CORE
     imports PLUTUS-CORE-LAMBDA-CALCULUS
-    imports PLUTUS-CORE-BOUNDED-INTEGER-ARITHMETIC
+    imports PLUTUS-CORE-BOUNDED-INTEGERS
     imports PLUTUS-CORE-BYTESTRINGS
     imports PLUTUS-CORE-CRYPTOGRAPHY
     imports PLUTUS-CORE-TYPE-ERASURE
