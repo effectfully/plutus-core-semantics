@@ -278,33 +278,34 @@ The following constructs convert various data types to byte strings, 0-padding t
 than the length parameter.
 
 ```k
-    syntax Term ::= #bytestringSizeString(Int, String)
-                  | #mkByteString(Int, Bytes)
+    syntax Term ::= #mkByteString(Int, Bytes)
                   | #bytestringSizeLengthInt(Int, Int, Int)
                   | #bytestringSizeLengthBytes(Int, Int, Bytes)
 
-    rule #bytestringSizeString(S, STR:String)
-      => #bytestringSizeLengthInt( S
-                                 , (lengthString(STR) +Int 1) /Int 2
-                                 , String2Base(STR, 16))
     rule #bytestringSizeLengthInt(S, L, I)
       => #bytestringSizeLengthBytes(S, L, Int2Bytes(I, BE, Unsigned))
     rule #bytestringSizeLengthBytes(S, L, B)
       => #mkByteString(S, padLeftBytes(B, L, 0))
     rule #mkByteString(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
-    rule #mkByteString(S, B) => (error (con (bytestring))) requires lengthBytes(B)  >Int S
+    rule #mkByteString(S, B) => #failure                   requires lengthBytes(B)  >Int S
 ```
 
-Convert bytestring literals into their internal representation:
+TODO: Cleanup. Convert bytestring literals into their internal representation.
+We:
+
+* Remove leading `#`.
+* Convert hex-encoded part into a base 16 integer (we lose information about leading zeros here).
+* Convert to `Bytes`.
+* Add leading zeros by padding to half the length of original hex string.
 
 ```k
     syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
     rule (con S ! BS:ByteString)
-      => #mkByteString(S, padLeftBytes(Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
-                                                                    , 16)
-                                                       , BE, Unsigned)
-                                             , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
-                                             , 0))
+      => (con S ! padLeftBytes( Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
+                                                      , 16)
+                                         , BE, Unsigned)
+                              , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
+                              , 0))
 ```
 
 Bytestring builtins:
@@ -331,8 +332,7 @@ Bytestring builtins:
       requires S1 >=Int lengthBytes(B2)
 
     rule [[(con resizeByteString) (con S1:Int)] (con S2 ! B2:Bytes)]
-      => (error (con (bytestring)))
-      requires S1 <Int lengthBytes(B2)
+      => #mkByteString(S1, B2)
 
     rule [[(con equalsByteString) (con S ! B1:Bytes)] (con S ! B2:Bytes)] => #mkBool(B1 ==K B2)
 ```

@@ -180,8 +180,13 @@ rule (con 2 ! #token("0",                "ByteString"):ByteString) => (con 2 !  
 rule (con 2 ! #token("00",               "ByteString"):ByteString) => (con 2 !      0 : nilBytes)
 rule (con 2 ! #token("0000",             "ByteString"):ByteString) => (con 2 ! 0  : 0 : nilBytes)
 rule (con 2 ! #token("1000",             "ByteString"):ByteString) => (con 2 ! 16 : 0 : nilBytes)
-rule (con 2 ! #token("00000",            "ByteString"):ByteString) => (error (con (bytestring)))
 rule (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString) => (con 8 ! 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
+```
+
+TODO: Bounds checking needs to happen separately in a well formedness check.
+
+```todo-well-formedness-check
+rule (con 2 ! #token("00000",            "ByteString"):ByteString) => #failure
 ```
 
 Integer to ByteString
@@ -194,7 +199,7 @@ rule [[(con intToByteString) (con 3)] (con 2 ! 100)]
 rule [[(con intToByteString) (con 5)] (con 2 ! 100)]
   => (con 5 ! 0 : 0 : 0 : 0 : 100 : nilBytes)
 rule [[(con intToByteString) (con 1 )] (con 2 ! 999)]
-  => (error (con (bytestring)))
+  => #failure
 ```
 
 TODO: The behaviour of converting negative integers to bytestrings is not specified:
@@ -206,7 +211,7 @@ TODO: The behaviour of converting negative integers to bytestrings is not specif
 
 Concatentate:
 
-```k
+```kx
 rule [ [ (con concatenate) (con 2 ! #token("01",   "ByteString"):ByteString) ]
                            (con 2 ! #token("03",   "ByteString"):ByteString) ]
   => (con 2 ! 01 : 03 : nilBytes)
@@ -239,8 +244,8 @@ rule [[(con resizeByteString) (con 3)] (con 5 ! #token("abcdef", "ByteString"):B
 rule [[(con resizeByteString) (con 5)] (con 3 ! #token("abcdef", "ByteString"):ByteString)]
   => (con 5 ! 171 : 205 : 239 : nilBytes )
 
-rule [[(con resizeByteString) (con 2)] (con 5 ! #token("abcdef", "ByteString"):ByteString)]
-  => (error (con (bytestring)))
+rule <k> [[(con resizeByteString) (con 2)] (con 5 ! #token("abcdef", "ByteString"):ByteString)]
+  => #failure ~> _ </k>
 ```
 
 Equals (ByteStrings)
@@ -258,9 +263,9 @@ rule [[(con equalsByteString) (con 2 ! #token("0001", "ByteString"):ByteString)]
 rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"):ByteString)]
                               (con 3 ! #token("abcd", "ByteString"):ByteString)]
   => #true
-rule [[(con equalsByteString) (con 2 ! #token("abcd", "ByteString"):ByteString)]
-                              (con 1 ! #token("abcd", "ByteString"):ByteString)]
-  => (error (con (bytestring)))
+rule <k> [[(con equalsByteString) (con 2 ! #token("abcd", "ByteString"):ByteString)]
+                                  (con 1 ! #token("abcd", "ByteString"):ByteString)]
+  => #failure ~> _ </k>
 ```
 
 Cryptographic constructs
