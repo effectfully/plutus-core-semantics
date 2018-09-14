@@ -299,7 +299,10 @@ Convert bytestring literals into their internal representation:
 
 ```k
     syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
-    rule (con S ! BS:ByteString) => #bytestringSizeString(S, replaceFirst(ByteString2String(BS), "#", ""))
+    rule (con S ! BS:ByteString)
+      => #bytestringSizeLengthInt( S
+                                 , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
+                                 , String2Base(replaceFirst(ByteString2String(BS), "#", ""), 16))
 ```
 
 Bytestring builtins:
