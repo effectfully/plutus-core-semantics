@@ -183,12 +183,6 @@ rule (con 2 ! #token("1000",             "ByteString"):ByteString) => (con 2 ! 1
 rule (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString) => (con 8 ! 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
 ```
 
-TODO: Bounds checking needs to happen separately in a well formedness check.
-
-```todo-well-formedness-check
-rule (con 2 ! #token("00000",            "ByteString"):ByteString) => #failure
-```
-
 Integer to ByteString
 
 ```k
@@ -211,13 +205,13 @@ TODO: The behaviour of converting negative integers to bytestrings is not specif
 
 Concatentate:
 
-```kx
+```k
 rule [ [ (con concatenate) (con 2 ! #token("01",   "ByteString"):ByteString) ]
                            (con 2 ! #token("03",   "ByteString"):ByteString) ]
   => (con 2 ! 01 : 03 : nilBytes)
 rule [ [ (con concatenate) (con 2 ! #token("0102", "ByteString"):ByteString) ]
                            (con 2 ! #token("0304", "ByteString"):ByteString) ]
-  => (error (con (bytestring)))
+  => #failure
 ```
 
 `takeByteString`
@@ -263,10 +257,18 @@ rule [[(con equalsByteString) (con 2 ! #token("0001", "ByteString"):ByteString)]
 rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"):ByteString)]
                               (con 3 ! #token("abcd", "ByteString"):ByteString)]
   => #true
-rule <k> [[(con equalsByteString) (con 2 ! #token("abcd", "ByteString"):ByteString)]
+```
+
+TODO: Bounds checking needs to happen separately in a well formedness check, so that terms that
+never reach the top of the `K` cell are checked too.
+
+```todo-well-formedness-check
+rule (con 2 ! #token("00000", "ByteString"):ByteString) => #failure
+rule <k> [[(con equalsByteString) (con 1 ! #token("abcd", "ByteString"):ByteString)]
                                   (con 1 ! #token("abcd", "ByteString"):ByteString)]
   => #failure ~> _ </k>
 ```
+
 
 Cryptographic constructs
 ------------------------

@@ -278,7 +278,7 @@ The following constructs convert various data types to byte strings, 0-padding t
 than the length parameter.
 
 ```k
-    syntax Term ::= #mkByteString(Int, Bytes)
+    syntax KItem ::= #mkByteString(Int, Bytes) [function]
                   | #bytestringSizeLengthInt(Int, Int, Int)
                   | #bytestringSizeLengthBytes(Int, Int, Bytes)
 
