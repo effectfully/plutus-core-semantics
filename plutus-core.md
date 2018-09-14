@@ -270,7 +270,8 @@ module PLUTUS-CORE-BYTESTRINGS
     imports PLUTUS-CORE-BUILTINS
     imports BYTES
 
-    syntax ResultTerm ::= bytestring(Int, Bytes)
+    syntax Constant ::= Size "!" Bytes
+    rule isResultTerm((con S:Size ! B:Bytes)) => true
 ```
 
 The following constructs convert various data types to byte strings, 0-padding them if they are less
@@ -290,7 +291,7 @@ than the length parameter.
       => #bytestringSizeLengthBytes(S, L, Int2Bytes(I, BE, Unsigned))
     rule #bytestringSizeLengthBytes(S, L, B)
       => #bytestringSizeBytes(S, padLeftBytes(B, L, 0))
-    rule #bytestringSizeBytes(S, B) => bytestring(S, B)           requires lengthBytes(B) <=Int S
+    rule #bytestringSizeBytes(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
     rule #bytestringSizeBytes(S, B) => (error (con (bytestring))) requires lengthBytes(B)  >Int S
 ```
 
@@ -307,28 +308,28 @@ Bytestring builtins:
     rule [[(con intToByteString) (con S1:Int):Value] (con S2 ! V:Int)]
       => #bytestringSizeLengthInt(S1, S1, V)
 
-    rule [[(con concatenate) bytestring(S1, V1)] bytestring(S1, V2)]
-      => #bytestringSizeBytes(S1, V1 +Bytes V2)
+    rule [[(con concatenate) (con S1 ! B1:Bytes)] (con S1 ! B2:Bytes)]
+      => #bytestringSizeBytes(S1, B1:Bytes +Bytes B2:Bytes)
 
-    rule [[(con takeByteString) (con S1 ! I1)] bytestring(S2, B2)]
-      => bytestring(S2, substrBytes(B2, 0, I1))
+    rule [[(con takeByteString) (con S1 ! I1)] (con S2 ! B2:Bytes)]
+      => (con S2 ! substrBytes(B2, 0, I1))
       requires I1 >Int 0 andBool I1 <=Int lengthBytes(B2)
-    rule [[(con takeByteString) (con S1 ! I1)] bytestring(S2, B2)]
-      => bytestring(S2, .Bytes)
+    rule [[(con takeByteString) (con S1 ! I1)] (con S2 ! B2:Bytes)]
+      => (con S2 ! .Bytes)
       requires I1 <=Int 0
-    rule [[(con takeByteString) (con S1 ! I1)] bytestring(S2, B2)]
-      => bytestring(S2, B2)
+    rule [[(con takeByteString) (con S1 ! I1)] (con S2 ! B2:Bytes)]
+      => (con S2 ! B2)
       requires I1 >Int lengthBytes(B2)
 
-    rule [[(con resizeByteString) (con S1:Int)] bytestring(S2, B2)]
-      => bytestring(S1, B2)
+    rule [[(con resizeByteString) (con S1:Int)] (con S2 ! B2:Bytes)]
+      => (con S1 ! B2)
       requires S1 >=Int lengthBytes(B2)
 
-    rule [[(con resizeByteString) (con S1:Int)] bytestring(S2, B2)]
+    rule [[(con resizeByteString) (con S1:Int)] (con S2 ! B2:Bytes)]
       => (error (con (bytestring)))
       requires S1 <Int lengthBytes(B2)
 
-    rule [[(con equalsByteString) bytestring(S, B1)] bytestring(S, B2)] => #mkBool(B1 ==K B2)
+    rule [[(con equalsByteString) (con S ! B1:Bytes)] (con S ! B2:Bytes)] => #mkBool(B1 ==K B2)
 ```
 
 ```k
@@ -342,8 +343,8 @@ Cryptographic Builtins
 module PLUTUS-CORE-CRYPTOGRAPHY
     imports PLUTUS-CORE-BYTESTRINGS
     imports HASH
-    rule [(con sha2_256) bytestring(S, B)] => #bytestringSizeBytes(256, Sha2_256(B))
-    rule [(con sha3_256) bytestring(S, B)] => #bytestringSizeBytes(256, Sha3_256(B))
+    rule [(con sha2_256) (con S ! B:Bytes)] => #bytestringSizeBytes(256, Sha2_256(B))
+    rule [(con sha3_256) (con S ! B:Bytes)] => #bytestringSizeBytes(256, Sha3_256(B))
 endmodule
 ```
 

@@ -176,23 +176,23 @@ Bytestrings
 -----------
 
 ```k
-rule (con 2 ! #token("0",                "ByteString")) => bytestring(2,      0 : nilBytes)
-rule (con 2 ! #token("00",               "ByteString")) => bytestring(2,      0 : nilBytes)
-rule (con 2 ! #token("0000",             "ByteString")) => bytestring(2, 0  : 0 : nilBytes)
-rule (con 2 ! #token("1000",             "ByteString")) => bytestring(2, 16 : 0 : nilBytes)
-rule (con 2 ! #token("00000",            "ByteString")) => (error (con (bytestring)))
-rule (con 8 ! #token("0123456789abcdef", "ByteString")) => bytestring(8, 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
+rule (con 2 ! #token("0",                "ByteString"):ByteString) => (con 2 !      0 : nilBytes)
+rule (con 2 ! #token("00",               "ByteString"):ByteString) => (con 2 !      0 : nilBytes)
+rule (con 2 ! #token("0000",             "ByteString"):ByteString) => (con 2 ! 0  : 0 : nilBytes)
+rule (con 2 ! #token("1000",             "ByteString"):ByteString) => (con 2 ! 16 : 0 : nilBytes)
+rule (con 2 ! #token("00000",            "ByteString"):ByteString) => (error (con (bytestring)))
+rule (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString) => (con 8 ! 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
 ```
 
 Integer to ByteString
 
 ```k
 rule [[(con intToByteString) (con 1 )] (con 2 ! 100)]
-  => bytestring(1 , 100 : nilBytes)
+  => (con 1 ! 100 : nilBytes)
 rule [[(con intToByteString) (con 3)] (con 2 ! 100)]
-  => bytestring(3, 0 : 0 : 100 : nilBytes)
+  => (con 3 ! 0 : 0 : 100 : nilBytes)
 rule [[(con intToByteString) (con 5)] (con 2 ! 100)]
-  => bytestring(5, 0 : 0 : 0 : 0 : 100 : nilBytes)
+  => (con 5 ! 0 : 0 : 0 : 0 : 100 : nilBytes)
 rule [[(con intToByteString) (con 1 )] (con 2 ! 999)]
   => (error (con (bytestring)))
 ```
@@ -207,11 +207,11 @@ TODO: The behaviour of converting negative integers to bytestrings is not specif
 Concatentate:
 
 ```k
-rule [ [ (con concatenate) (con 2 ! #token("01",   "ByteString")) ]
-                           (con 2 ! #token("03",   "ByteString")) ]
-  => bytestring(2, 01 : 03 : nilBytes)
-rule [ [ (con concatenate) (con 2 ! #token("0102", "ByteString")) ]
-                           (con 2 ! #token("0304", "ByteString")) ]
+rule [ [ (con concatenate) (con 2 ! #token("01",   "ByteString"):ByteString) ]
+                           (con 2 ! #token("03",   "ByteString"):ByteString) ]
+  => (con 2 ! 01 : 03 : nilBytes)
+rule [ [ (con concatenate) (con 2 ! #token("0102", "ByteString"):ByteString) ]
+                           (con 2 ! #token("0304", "ByteString"):ByteString) ]
   => (error (con (bytestring)))
 ```
 
@@ -219,53 +219,48 @@ rule [ [ (con concatenate) (con 2 ! #token("0102", "ByteString")) ]
 : returns the prefix of `xs` of length `n`, or `xs` itself if `n > length xs`.
 
 ```k
-rule [[(con takeByteString) (con 1 ! 2)] (con 8 ! #token("0123456789abcdef", "ByteString"))]
-  => bytestring(8, 1 : 35 : nilBytes)
-rule [[(con takeByteString) (con 1 ! 31)] (con 8 ! #token("0123456789abcdef", "ByteString"))]
-  => bytestring(8, 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
-rule [[(con takeByteString) (con 1 ! 0)] (con 8 ! #token("0123456789abcdef", "ByteString"))]
-  => bytestring(8, nilBytes)
+rule [[(con takeByteString) (con 1 ! 2)] (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString)]
+  => (con 8 ! 1 : 35 : nilBytes)
+rule [[(con takeByteString) (con 1 ! 31)] (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString)]
+  => (con 8 ! 1 : 35 : 69 : 103 : 137 : 171 : 205 : 239 : nilBytes)
+rule [[(con takeByteString) (con 1 ! 0)] (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString)]
+  => (con 8 ! nilBytes)
 // This is the observed Haskell behaviour for negative lengths.
-rule [[(con takeByteString) (con 1 ! -1)] (con 8 ! #token("0123456789abcdef", "ByteString"))]
-  => bytestring(8, nilBytes)
+rule [[(con takeByteString) (con 1 ! -1)] (con 8 ! #token("0123456789abcdef", "ByteString"):ByteString)]
+  => (con 8 ! nilBytes)
 ```
 
 Resize ByteString
 
 ```k
-rule [[(con resizeByteString) (con 3)] (con 5 ! #token("abcdef", "ByteString"))]
-  => bytestring (3, 171 : 205 : 239 : nilBytes )
+rule [[(con resizeByteString) (con 3)] (con 5 ! #token("abcdef", "ByteString"):ByteString)]
+  => (con 3 ! 171 : 205 : 239 : nilBytes )
 
-rule [[(con resizeByteString) (con 5)] (con 3 ! #token("abcdef", "ByteString"))]
-  => bytestring (5, 171 : 205 : 239 : nilBytes )
+rule [[(con resizeByteString) (con 5)] (con 3 ! #token("abcdef", "ByteString"):ByteString)]
+  => (con 5 ! 171 : 205 : 239 : nilBytes )
 
-rule [[(con resizeByteString) (con 2)] (con 5 ! #token("abcdef", "ByteString"))]
+rule [[(con resizeByteString) (con 2)] (con 5 ! #token("abcdef", "ByteString"):ByteString)]
   => (error (con (bytestring)))
 ```
 
 Equals (ByteStrings)
 
 ```k
-rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"))]
-                              (con 3 ! #token("abcde", "ByteString"))]
+rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"):ByteString)]
+                              (con 3 ! #token("abcde", "ByteString"):ByteString)]
   => #false
-
-rule [[(con equalsByteString) (con 3 ! #token("abcde", "ByteString"))]
-                              (con 3 ! #token("abcd", "ByteString"))]
+rule [[(con equalsByteString) (con 3 ! #token("abcde", "ByteString"):ByteString)]
+                              (con 3 ! #token("abcd", "ByteString"):ByteString)]
   => #false
-
-rule [[(con equalsByteString) (con 2 ! #token("0001", "ByteString"))]
-                              (con 2 ! #token("01", "ByteString"))]
+rule [[(con equalsByteString) (con 2 ! #token("0001", "ByteString"):ByteString)]
+                              (con 2 ! #token("01", "ByteString"):ByteString)]
   => #false
-
-rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"))]
-                              (con 3 ! #token("abcd", "ByteString"))]
+rule [[(con equalsByteString) (con 3 ! #token("abcd", "ByteString"):ByteString)]
+                              (con 3 ! #token("abcd", "ByteString"):ByteString)]
   => #true
-
-rule [[(con equalsByteString) (con 2 ! #token("abcd", "ByteString"))]
-                              (con 1 ! #token("abcd", "ByteString"))]
+rule [[(con equalsByteString) (con 2 ! #token("abcd", "ByteString"):ByteString)]
+                              (con 1 ! #token("abcd", "ByteString"):ByteString)]
   => (error (con (bytestring)))
-
 ```
 
 Cryptographic constructs
