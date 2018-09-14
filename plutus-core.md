@@ -205,7 +205,7 @@ module PLUTUS-CORE-BOUNDED-INTEGERS
     imports PLUTUS-CORE-BUILTINS
 
     rule isResultTerm((con S ! I:Int)) => true
-    rule isResultTerm((con I:Int):Value) => true
+    rule isResultTerm((con (I:Int):Constant)) => true
 
     syntax KItem ::= #mkInt(Size, Int) [function]
     rule #mkInt(S, V) => (con S ! V) 
@@ -229,7 +229,7 @@ module PLUTUS-CORE-BOUNDED-INTEGERS
 
     // resizeInteger builtin
     rule [[(con resizeInteger) (con S1:Int)] (con S2 ! I:Int)] => #mkInt(S1, I)
-```    
+```
 
 ### Boolean expressions
 
