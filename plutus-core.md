@@ -311,8 +311,8 @@ We:
 Bytestring builtins:
 
 ```k
-    rule [[(con intToByteString) (con S1:Int):Value] (con S2 ! V:Int)]
-      => #bytestringSizeLengthInt(S1, S1, V)
+    rule [[(con intToByteString) (con S1:Int):Value] (con S2 ! I:Int)]
+      => #mkByteString(S1, padLeftBytes(Int2Bytes(I, BE, Unsigned), S1, 0))
 
     rule [[(con concatenate) (con S1 ! B1:Bytes)] (con S1 ! B2:Bytes)]
       => #mkByteString(S1, B1:Bytes +Bytes B2:Bytes)
