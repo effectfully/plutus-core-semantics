@@ -279,7 +279,7 @@ than the length parameter.
 
 ```k
     syntax Term ::= #bytestringSizeString(Int, String)
-                  | #bytestringSizeBytes(Int, Bytes)
+                  | #mkByteString(Int, Bytes)
                   | #bytestringSizeLengthInt(Int, Int, Int)
                   | #bytestringSizeLengthBytes(Int, Int, Bytes)
 
@@ -290,9 +290,9 @@ than the length parameter.
     rule #bytestringSizeLengthInt(S, L, I)
       => #bytestringSizeLengthBytes(S, L, Int2Bytes(I, BE, Unsigned))
     rule #bytestringSizeLengthBytes(S, L, B)
-      => #bytestringSizeBytes(S, padLeftBytes(B, L, 0))
-    rule #bytestringSizeBytes(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
-    rule #bytestringSizeBytes(S, B) => (error (con (bytestring))) requires lengthBytes(B)  >Int S
+      => #mkByteString(S, padLeftBytes(B, L, 0))
+    rule #mkByteString(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
+    rule #mkByteString(S, B) => (error (con (bytestring))) requires lengthBytes(B)  >Int S
 ```
 
 Convert bytestring literals into their internal representation:
@@ -300,7 +300,7 @@ Convert bytestring literals into their internal representation:
 ```k
     syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
     rule (con S ! BS:ByteString)
-      => #bytestringSizeBytes(S, padLeftBytes(Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
+      => #mkByteString(S, padLeftBytes(Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
                                                                     , 16)
                                                        , BE, Unsigned)
                                              , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
@@ -314,7 +314,7 @@ Bytestring builtins:
       => #bytestringSizeLengthInt(S1, S1, V)
 
     rule [[(con concatenate) (con S1 ! B1:Bytes)] (con S1 ! B2:Bytes)]
-      => #bytestringSizeBytes(S1, B1:Bytes +Bytes B2:Bytes)
+      => #mkByteString(S1, B1:Bytes +Bytes B2:Bytes)
 
     rule [[(con takeByteString) (con S1 ! I1)] (con S2 ! B2:Bytes)]
       => (con S2 ! substrBytes(B2, 0, I1))
@@ -348,8 +348,8 @@ Cryptographic Builtins
 module PLUTUS-CORE-CRYPTOGRAPHY
     imports PLUTUS-CORE-BYTESTRINGS
     imports HASH
-    rule [(con sha2_256) (con S ! B:Bytes)] => #bytestringSizeBytes(256, Sha2_256(B))
-    rule [(con sha3_256) (con S ! B:Bytes)] => #bytestringSizeBytes(256, Sha3_256(B))
+    rule [(con sha2_256) (con S ! B:Bytes)] => #mkByteString(256, Sha2_256(B))
+    rule [(con sha3_256) (con S ! B:Bytes)] => #mkByteString(256, Sha3_256(B))
 endmodule
 ```
 
