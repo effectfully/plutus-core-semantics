@@ -269,25 +269,6 @@ module PLUTUS-CORE-BYTESTRINGS
     imports PLUTUS-CORE-BOUNDED-INTEGERS
     imports PLUTUS-CORE-BUILTINS
     imports BYTES
-
-    syntax Constant ::= Size "!" Bytes
-    rule isResultTerm((con S:Size ! B:Bytes)) => true
-```
-
-The following constructs convert various data types to byte strings, 0-padding them if they are less
-than the length parameter.
-
-```k
-    syntax KItem ::= #mkByteString(Int, Bytes) [function]
-                  | #bytestringSizeLengthInt(Int, Int, Int)
-                  | #bytestringSizeLengthBytes(Int, Int, Bytes)
-
-    rule #bytestringSizeLengthInt(S, L, I)
-      => #bytestringSizeLengthBytes(S, L, Int2Bytes(I, BE, Unsigned))
-    rule #bytestringSizeLengthBytes(S, L, B)
-      => #mkByteString(S, padLeftBytes(B, L, 0))
-    rule #mkByteString(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
-    rule #mkByteString(S, B) => #failure                   requires lengthBytes(B)  >Int S
 ```
 
 TODO: Cleanup. Convert bytestring literals into their internal representation.
@@ -299,7 +280,9 @@ We:
 * Add leading zeros by padding to half the length of original hex string.
 
 ```k
-    syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
+    syntax Constant ::= Size "!" Bytes
+    rule isResultTerm((con S:Size ! B:Bytes)) => true
+        syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
     rule (con S ! BS:ByteString)
       => (con S ! padLeftBytes( Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
                                                       , 16)
@@ -307,6 +290,15 @@ We:
                               , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
                               , 0))
 ```
+
+`#mkByteString` checks that a bytestring is within bounds:
+
+```k
+    syntax KItem ::= #mkByteString(Int, Bytes) [function]
+    rule #mkByteString(S, B) => (con S ! B)                requires lengthBytes(B) <=Int S
+    rule #mkByteString(S, B) => #failure                   requires lengthBytes(B)  >Int S
+```
+
 
 Bytestring builtins:
 
