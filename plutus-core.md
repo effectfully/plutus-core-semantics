@@ -300,11 +300,11 @@ Convert bytestring literals into their internal representation:
 ```k
     syntax String ::= ByteString2String(ByteString) [function, hook(STRING.token2string)]
     rule (con S ! BS:ByteString)
-      => #bytestringSizeLengthBytes( S
-                                   , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
-                                   , Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
-                                                           , 16)
-                                              , BE, Unsigned))
+      => #bytestringSizeBytes(S, padLeftBytes(Int2Bytes( String2Base( replaceFirst(ByteString2String(BS), "#", "")
+                                                                    , 16)
+                                                       , BE, Unsigned)
+                                             , (lengthString(replaceFirst(ByteString2String(BS), "#", "")) +Int 1) /Int 2
+                                             , 0))
 ```
 
 Bytestring builtins:
