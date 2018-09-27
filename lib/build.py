@@ -9,6 +9,7 @@ class Plutus(KProject):
     def __init__(self):
         super().__init__(builddir = '.build')
         self.include('lib/build.ninja')
+        self.testdir = '$builddir/t/'
         self.java    = self.kdefinition( name    = 'plutus-core-java'
                                        , main    = self.tangleddir('plutus-core.k')
                                        , backend = 'java'
@@ -18,20 +19,34 @@ class Plutus(KProject):
                                                 , kompiled_dirname = 'plutus-core-kompiled'
                                                 , alias            = 'spec-ocaml'
                                                 )
-        self.testdir = '$builddir/t/'
+        self.java_typing = self.kdefinition( name    = 'typing-java'
+                                           , main    = self.tangleddir('typing.k')
+                                           , backend = 'java'
+                                           , alias   = 'typing-java'
+                                           )
+        self.ocaml_typing = self.kdefinition( name    = 'typing-ocaml'
+                                            , main    = self.tangleddir('typing.k')
+                                            , backend = 'ocaml'
+                                            , alias   = 'typing-ocaml'
+                                            )
 
-    def test(self, input):
+    def test_exec(self, input):
         expected = input + '.expected'
         self.java.krun_and_check ('$builddir/t/', input, expected)
         self.ocaml.krun_and_check('$builddir/t/', input, expected, krun_flags = '--interpret')
 
-    def test_ocaml(self, input):
+    def test_exec_ocaml(self, input):
         expected = input + '.ocaml.expected'
         self.ocaml.krun_and_check('$builddir/t/', input, expected, krun_flags = '--interpret')
 
-    def test_java(self, input):
+    def test_exec_java(self, input):
         expected = input + '.java.expected'
         self.java.krun_and_check('$builddir/t/', input, expected)
+
+    def test_typing(self, input):
+        expected = input + '.typing.expected'
+        self.java_typing.krun_and_check('$builddir/t/', input, expected)
+        self.ocaml_typing.krun_and_check('$builddir/t/', input, expected)
 
 plutus = Plutus()
 
@@ -41,11 +56,12 @@ plutus = Plutus()
 # Since the OCaml does not support reachability claims (even
 # concrete ones) these also function as smoke tests for the OCaml backend)
 #
-plutus.test('t/builtin-app.plc')
+plutus.test_exec('t/builtin-app.plc')
+plutus.test_typing('t/builtin-app.plc')
 
 # We need distinct exptected and actual files for these.
-plutus.test_ocaml('t/bytestring.plc')
-plutus.test_java('t/bytestring.plc')
+plutus.test_exec_ocaml('t/bytestring.plc')
+plutus.test_exec_java('t/bytestring.plc')
 
 # Cryptography
 # ------------
@@ -53,10 +69,10 @@ plutus.test_java('t/bytestring.plc')
 # We do not yet support hashing on the Java backend since the SHA3 hook does
 # not exist, and the SHA2 hook is missing an alias into the HASH namespace.
 #
-plutus.test_ocaml('t/sha2.plc')
-# plutus.test_java('t/sha2.plc')
-plutus.test_ocaml('t/sha3.plc')
-# plutus.test_java('t/sha3.plc')
+plutus.test_exec_ocaml('t/sha2.plc')
+# plutus.test_exec_java('t/sha2.plc')
+plutus.test_exec_ocaml('t/sha3.plc')
+# plutus.test_exec_java('t/sha3.plc')
 
 # Complex tests
 # -------------
@@ -64,7 +80,7 @@ plutus.test_ocaml('t/sha3.plc')
 # These are tests involving recursion, and other tests from the Roman and the
 # IOHK Plutus team.
 #
-plutus.test('t/sum-to-10.plc')
-plutus.test('t/11-scott-to-int.plc')
-plutus.test('t/if-then-else.plc')
-plutus.test('t/sum-list.plc')
+plutus.test_exec('t/sum-to-10.plc')
+plutus.test_exec('t/11-scott-to-int.plc')
+plutus.test_exec('t/if-then-else.plc')
+plutus.test_exec('t/sum-list.plc')

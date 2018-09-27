@@ -41,12 +41,15 @@ build $opam_root/4.03.0+k/lib/uuidm/opam.config : opam-install $opam_root/4.03.0
 
 build $tangleddir/plutus-core.k      : tangle plutus-core.md $
                                      | $tangle_repository/.git
+build $tangleddir/typing.k           : tangle typing.md $
+                                     | $tangle_repository/.git
 build $tangleddir/plutus-core-spec.k : tangle plutus-core-spec.md $
                                      | $tangle_repository/.git
 build $tangleddir/krypto.k           : tangle $blockchainplugindir/krypto.md $
                                      | $tangle_repository/.git
     tangle_selector = .cryptography-hashes
 build $tangleddir/unit-tests-spec.k   : tangle unit-tests.md
+build $tangleddir/typing-tests-spec.k : tangle typing-tests.md
 build $tangleddir/verification-spec.k : tangle verification.md
 
 # Java build kompile pipeline
@@ -56,6 +59,12 @@ build $builddir/plutus-core-java/plutus-core-kompiled/timestamp : kompile $tangl
                                                                 | $tangleddir/krypto.k              $
                                                                   $k_bindir/kompile
     backend = java
+
+build $builddir/typing-java/typing-kompiled/timestamp : kompile $tangleddir/typing.k $
+                                                      | $tangleddir/plutus-core.k    $
+                                                        $k_bindir/kompile
+    backend = java
+    kompile_flags = --main-module PLUTUS-CORE-TYPING
 
 # OCaml build kompile pipeline
 # ----------------------------
@@ -107,6 +116,10 @@ build check-unit-tests : kprove $tangleddir/unit-tests-spec.k | spec-java
     directory = $builddir/plutus-core-java
 default check-unit-tests
 
+build check-typing-tests : kprove $tangleddir/typing-tests-spec.k | typing-java
+    directory = $builddir/typing-java
+default check-typing-tests
+
 build check-10 : kprove sum-to-10-spec.k $
                  | spec-java
     directory = $builddir/plutus-core-java
@@ -125,3 +138,4 @@ default check-verification
 # -------
 
 build spec-ocaml : phony $builddir/plutus-core-ocaml/plutus-core-kompiled/interpreter $ocamlkompileddir/realdef.cmxs
+build typing-java : phony $builddir/typing-java/typing-kompiled/timestamp
