@@ -24,11 +24,6 @@ class Plutus(KProject):
                                            , backend = 'java'
                                            , alias   = 'typing-java'
                                            )
-        self.ocaml_typing = self.kdefinition( name    = 'typing-ocaml'
-                                            , main    = self.tangleddir('typing.k')
-                                            , backend = 'ocaml'
-                                            , alias   = 'typing-ocaml'
-                                            )
 
     def test_exec(self, input):
         expected = input + '.expected'
@@ -46,7 +41,6 @@ class Plutus(KProject):
     def test_typing(self, input):
         expected = input + '.typing.expected'
         self.java_typing.krun_and_check('$builddir/t/', input, expected)
-        self.ocaml_typing.krun_and_check('$builddir/t/', input, expected)
 
 plutus = Plutus()
 
