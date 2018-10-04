@@ -41,7 +41,7 @@ module PLUTUS-CORE-SYNTAX-TYPES
                         | TyBuiltinName
 
     syntax Type ::= TyVar
-                  | "(" "fun" Type Type ")" [seqstrict]
+                  | "(" "fun" Type Type ")"
                   | "(" "all" TyVar Kind Type ")"
                   | "(" "fix" TyVar Type ")"
                   | "[" Type Type "]" [seqstrict]
@@ -50,7 +50,7 @@ module PLUTUS-CORE-SYNTAX-TYPES
     syntax TyValue ::= "(" "fun" TyValue TyValue ")"
 //                     | "(" "all" TyVar Kind TyValue ")"
                      | "(" "fix" TyVar TyValue ")"
-//                     | "(" "lam" TyVar Kind Type ")"
+                     | "(" "lam" TyVar Kind Type ")"
                      | "(" "con" TyConstant ")"
                      | NeutralTy
 
@@ -58,8 +58,13 @@ module PLUTUS-CORE-SYNTAX-TYPES
                        | "[" NeutralTy TyValue "]"
 
     syntax Kind ::= "(" "type" ")"
-                  | "(" "fun" Kind Kind ")"
+                  | "(" "Kfun" Kind Kind ")"
                   | "(" "size" ")"
+
+        
+        
+        
+    syntax Type ::= "(" "Kfun" Type Type ")"
 endmodule
 ```
 
@@ -94,7 +99,7 @@ module PLUTUS-CORE-SYNTAX-BASE
 
     syntax Term ::= Var
                   | "(" "run" Term ")"
-                  | "{" Term Type "}"
+                  | "{" Term Type "}" [seqstrict]
                   | "(" "unwrap" Term ")"
                   | "[" Term Term "]" [seqstrict]
                   | "(" "error" Type ")"
@@ -109,14 +114,66 @@ module PLUTUS-CORE-SYNTAX-BASE
 endmodule
 ```
 
+Configuration
+=============
+
+```k
+module PLUTUS-CORE-TYPES-CONFIGURATION
+    syntax Program
+    configuration <k> $PGM:Program </k>
+                  <kind> .K </kind>
+endmodule
+```
+
+Kind Syntesis
+=============
+
+```k
+module PLUTUS-CORE-KIND-SYNTHESIS
+    imports PLUTUS-CORE-SYNTAX-TYPES
+    imports PLUTUS-CORE-TYPES-CONFIGURATION
+    imports DOMAINS
+    imports SUBSTITUTION
+    
+    syntax KResult ::= Kind
+    syntax KVariable ::= TyVar
+    syntax Type ::= Kind
+
+    // tyall
+    rule <kind> (all A K TY) => TY[K/A] == (type) </kind>
+    
+    // tyfix
+    //rule (fix A TY) => 
+
+    // tyfun
+    rule <kind> (fun (type) (type)) => (type) </kind>
+    
+    // tylam
+    rule <kind> (lam A:TyVar K TY) => (Kfun K TY[K/A]) </kind>
+      
+    // tyapp
+    rule <kind> [ (Kfun K1:Kind K2:Kind) K1:Kind ] => K2 </kind>
+
+    // tybuiltin
+    rule <kind> (con integer) => (Kfun (size) (type)) </kind>
+    rule <kind> (con S:Size) => ((size)):Kind </kind>
+
+    syntax K ::= Type "==" Kind [strict(1)]
+               | assertFailed(K)
+    rule <kind> K:Kind == K => K </kind>
+    rule <kind> K1:Kind == K2 => assertFailed(K1 == K2) </kind>
+      requires K1 =/=K K2
+endmodule
+```
+
 Typing
 ======
 
 ```k
-module PLUTUS-CORE-TYPING-CONFIGURATION
+module PLUTUS-CORE-TYPE-SYNTHESIS
     imports PLUTUS-CORE-SYNTAX-BASE
-
-    configuration <k> $PGM:Program </k>
+    imports PLUTUS-CORE-KIND-SYNTHESIS
+    imports SUBSTITUTION
 ```
 
 Program version has no semantic meaning:
@@ -127,41 +184,45 @@ Program version has no semantic meaning:
 
 ```k
     syntax KindedType ::= Type "@" Kind
-    syntax Type       ::= KindedType 
-    syntax KResult    ::= KindedType
-endmodule
-```
-
-```k
-module PLUTUS-CORE-TYPING-BUILTINS
-    imports PLUTUS-CORE-TYPING-CONFIGURATION
-    imports SUBSTITUTION
+    syntax Term ::= Type
     
-    rule (con S ! _:Int) => [ (con integer) (con S) ] 
-    rule (con integer) => (con integer) @ (fun (size) (type))
-    rule (con S:Size):Type => (con S) @ (size)
-    rule [ T1@(fun K1 K2) T2@K1 ] => [ T1 T2 ] @ K2
+    // TODO: This is crude and ad hoc.
+    syntax ResultTyValue
+    syntax ResultType ::= ResultTyValue
+    syntax TyValue ::= ResultTyValue
+    syntax KResult ::= ResultType
+    syntax Type ::= ResultType
+    rule isResultType((all A:TyVar K TY)) => true
+    rule isResultType((fun TY1 TY2)) => true
+    rule isResultTyValue((con _:TyConstant)) => true
 
-    syntax KVariable ::= Var
-    rule (lam X:Var TY TM)
-      => (fun TY TM[TY/X])
-    rule (fun TY1@(type) TY2@(type)) => (fun TY1 TY2) @ (type)
+    syntax Type ::= #type(Term) | #type(Type)
+    rule #type(TY:Type) => TY [anywhere]
 
-    syntax KVariable ::= TyVar
-    syntax K ::= #allWithHole(TyVar, Kind)
-    rule (all ALPHA:TyVar K:Kind TY:Type)
-      => TY[ALPHA @ K / ALPHA] ~> #allWithHole(ALPHA, K)
-    rule (TY@(type)):KResult ~> #allWithHole(ALPHA:TyVar, K:Kind)
-      => (all ALPHA K TY) @ (type)
-
+    // builtin
+    rule (con S ! _:Int) => [ (con integer) (con S:Size):Type ]:Type
     syntax TyVar ::= "s"
-    rule (con addInteger) => (all s (size) (fun [(con integer) s] (fun [(con integer) s] [(con integer) s])))
+    rule (con addInteger)
+      => (all s (size)
+           (fun [(con integer) s] (fun [(con integer) s] [(con integer) s])))
+    rule isResultType([(con integer):Type (con _:TyConstant):Type ]:Type) => true
+
+    // lam
+    rule (lam X:Var TY:Type TM:Term) => (fun TY #type(TM[TY/X]))
+
+    // app
+    rule [(fun T1:Type T2:Type):Term T1:Type] => T2
+
+    // inst
+    rule <k> { TY1 TY2:Type } ... </k>
+         <kind> .K => TY2 </kind>
+    rule <k> { (all A:TyVar K TY1) TY2:Type } => TY1[TY2/A] ... </k>
+         <kind> K:Kind => .K </kind>
 endmodule
 ```
 
 ```k
 module PLUTUS-CORE-TYPING
-    imports PLUTUS-CORE-TYPING-CONFIGURATION
-    imports PLUTUS-CORE-TYPING-BUILTINS
+    imports PLUTUS-CORE-TYPE-SYNTHESIS
 endmodule
 ```
