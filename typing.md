@@ -187,14 +187,9 @@ Program version has no semantic meaning:
     syntax Term ::= Type
     
     // TODO: This is crude and ad hoc.
-    syntax ResultTyValue
-    syntax ResultType ::= ResultTyValue
-    syntax TyValue ::= ResultTyValue
+    syntax ResultType ::= TyValue
     syntax KResult ::= ResultType
     syntax Type ::= ResultType
-    rule isResultType((all A:TyVar K TY)) => true
-    rule isResultType((fun TY1 TY2)) => true
-    rule isResultTyValue((con _:TyConstant)) => true
 
     syntax Type ::= #type(Term) | #type(Type)
     rule #type(TY:Type) => TY [anywhere]
@@ -205,15 +200,21 @@ Program version has no semantic meaning:
     rule (con addInteger)
       => (all s (size)
            (fun [(con integer) s] (fun [(con integer) s] [(con integer) s])))
-    rule isResultType([(con integer):Type (con _:TyConstant):Type ]:Type) => true
+    rule isResultType([(con integer) (con _)]:Type) => true
 
     // lam
     rule (lam X:Var TY:Type TM:Term) => (fun TY #type(TM[TY/X]))
 
     // app
+    rule isResultType((fun TY1:ResultType TY2:ResultType)) => true
     rule [(fun T1:Type T2:Type):Term T1:Type] => T2
 
     // inst
+
+    // All cannot be reduced unless it is in { }. This is similar to how lambdas need to be turned
+    // into closures.
+    rule isResultType((all A:TyVar K TY)) => true
+
     rule <k> { TY1 TY2:Type } ... </k>
          <kind> .K => TY2 </kind>
     rule <k> { (all A:TyVar K TY1) TY2:Type } => TY1[TY2/A] ... </k>
