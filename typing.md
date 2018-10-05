@@ -223,7 +223,6 @@ Program version has no semantic meaning:
     // All cannot be reduced unless it is in { }. This is similar to how lambdas need to be turned
     // into closures.
     rule isResultType((all A:TyVar K TY)) => true
-
     rule <k> { TY1 TY2:Type } ... </k>
          <kind> .K => TY2 </kind>
     rule <k> { (all A:TyVar K TY1) TY2:Type } => TY1[TY2/A] ... </k>
