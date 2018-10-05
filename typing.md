@@ -61,9 +61,6 @@ module PLUTUS-CORE-SYNTAX-TYPES
                   | "(" "Kfun" Kind Kind ")"
                   | "(" "size" ")"
 
-        
-        
-        
     syntax Type ::= "(" "Kfun" Type Type ")"
 endmodule
 ```
@@ -122,6 +119,8 @@ module PLUTUS-CORE-TYPES-CONFIGURATION
     syntax Program
     configuration <k> $PGM:Program </k>
                   <kind> .K </kind>
+
+    syntax Type ::= "#hole"
 endmodule
 ```
 
@@ -134,34 +133,45 @@ module PLUTUS-CORE-KIND-SYNTHESIS
     imports PLUTUS-CORE-TYPES-CONFIGURATION
     imports DOMAINS
     imports SUBSTITUTION
-    
+
     syntax KResult ::= Kind
     syntax KVariable ::= TyVar
     syntax Type ::= Kind
 
     // tyall
-    rule <kind> (all A K TY) => TY[K/A] == (type) </kind>
+    rule <kind> (all A K TY) => TY[K/A] == (type) ... </kind>
 
     // tyfix
     //rule (fix A TY) => 
 
     // tyfun
-    rule <kind> (fun (type) (type)) => (type) </kind>
+    rule <kind> (fun TY1 TY2)      => TY1 ~> (fun #hole TY2)  ... </kind> requires notBool(isKind(TY1))
+    rule <kind> (fun TY1:Kind TY2) => TY2 ~> (fun TY1 #hole)  ... </kind> requires notBool(isKind(TY2))
+    rule <kind> TY1:Kind ~> (fun #hole TY2 ) => (fun TY1 TY2) ... </kind>
+    rule <kind> TY2:Kind ~> (fun TY1  #hole) => (fun TY1 TY2) ... </kind>
+    rule <kind> (fun (type) (type)) => (type) ... </kind>
 
     // tylam
-    rule <kind> (lam A:TyVar K TY) => (Kfun K TY[K/A]) </kind>
+    rule <kind> (lam A:TyVar K TY) => (Kfun K TY[K/A]) ... </kind>
 
+    // seqstrict
+    rule <kind> [ TY1 TY2 ]      => TY1 ~> [ #hole TY2 ] ... </kind> requires notBool(isKind(TY1))
+    rule <kind> [ TY1:Kind TY2 ] => TY2 ~> [ TY1 #hole ] ... </kind> requires notBool(isKind(TY2))
+    rule <kind> TY1:Kind ~> [ #hole TY2 ] => [ TY1 TY2 ] ... </kind>
+    rule <kind> TY2:Kind ~> [ TY1  #hole] => [ TY1 TY2 ] ... </kind>
     // tyapp
-    rule <kind> [ (Kfun K1:Kind K2:Kind) K1:Kind ] => K2 </kind>
+    rule <kind> [ (Kfun K1:Kind K2:Kind) K1:Kind ] => K2 ... </kind>
 
     // tybuiltin
-    rule <kind> (con integer) => (Kfun (size) (type)) </kind>
-    rule <kind> (con S:Size) => ((size)):Kind </kind>
+    rule <kind> (con integer) => (Kfun (size) (type)) ... </kind>
+    rule <kind> (con S:Size) => ((size)):Kind ... </kind>
 
     syntax K ::= Type "==" Kind [strict(1)]
                | assertFailed(K)
-    rule <kind> K:Kind == K => K </kind>
-    rule <kind> K1:Kind == K2 => assertFailed(K1 == K2) </kind>
+    rule <kind> TY == K => TY ~> #hole == K ... </kind> requires notBool(isKind(TY))
+    rule <kind> K1:Kind ~> #hole == K2 => K1 == K2 ... </kind>
+    rule <kind> K:Kind == K => K ... </kind>
+    rule <kind> K1:Kind == K2 => assertFailed(K1 == K2) ... </kind>
       requires K1 =/=K K2
 endmodule
 ```
@@ -183,13 +193,12 @@ Program version has no semantic meaning:
 ```
 
 ```k
-    syntax KindedType ::= Type "@" Kind
     syntax Term ::= Type
-    
-    // TODO: This is crude and ad hoc.
+
     syntax ResultType ::= TyValue
     syntax KResult ::= ResultType
     syntax Type ::= ResultType
+    syntax KVariable ::= Var
 
     syntax Type ::= #type(Term) | #type(Type)
     rule #type(TY:Type) => TY [anywhere]

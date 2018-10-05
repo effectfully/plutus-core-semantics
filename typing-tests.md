@@ -6,11 +6,42 @@ module SPEC-IDS
 endmodule
 ```
 
-``` {.k}
+```k
 module TYPING-TESTS-SPEC
     imports PLUTUS-CORE-TYPING
     imports SPEC-IDS
+```
 
+Kind Synthesis tests
+====================
+
+```k
+    rule <kind> [ (con integer) (con 1) ]:Type => (type) </kind>
+         <k> .K </k>
+
+    rule <kind> (all s (size) s) => assertFailed((size):Kind == (type)) </kind>
+         <k> .K </k>
+
+    rule <kind> (all a (type) a) => (type) </kind>
+         <k> .K </k>
+
+    rule <kind> (all s (size) (fun [(con integer) s]
+                                   (fun [(con integer) s]
+                                        [(con integer) s])))
+             => (type)
+         </kind>
+         <k> .K </k>
+
+    rule <kind> (fun [ (con integer) (con 1) ] [ (con integer) (con 1) ])
+             => (type)
+         </kind>
+         <k> .K </k>
+```
+
+Type Synthesis tests
+====================
+
+```k
     rule <k> (con 1 ! 5) => [ (con integer) (con 1) ]:Type </k>
          <kind> .K => _ </kind>
 
@@ -23,6 +54,8 @@ module TYPING-TESTS-SPEC
           => [ (con integer) (con 1) ]:Type
          </k>
          <kind> .K => _ </kind>
-endmodule
 ```
 
+```k
+endmodule
+```
