@@ -141,16 +141,16 @@ module PLUTUS-CORE-KIND-SYNTHESIS
 
     // tyall
     rule <kind> (all A K TY) => TY[K/A] == (type) </kind>
-    
+
     // tyfix
     //rule (fix A TY) => 
 
     // tyfun
     rule <kind> (fun (type) (type)) => (type) </kind>
-    
+
     // tylam
     rule <kind> (lam A:TyVar K TY) => (Kfun K TY[K/A]) </kind>
-      
+
     // tyapp
     rule <kind> [ (Kfun K1:Kind K2:Kind) K1:Kind ] => K2 </kind>
 
