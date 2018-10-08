@@ -20,7 +20,7 @@ Lambda Calculus
 Basic application:
 
 ```k
-rule <k> [ (lam x a x) (con 1 ! 1) ] => (con 1 ! 1) </k>
+rule <k> [ (lam x [(con integer) (con 1)] x) (con 1 ! 1) ] => (con 1 ! 1) </k>
      <env> .Map => .Map </env>
 
 rule <k> [ (lam y a x) (con 1 ! 1) ] => x ~> .Map </k>
@@ -30,7 +30,9 @@ rule <k> [ (lam y a x) (con 1 ! 1) ] => x ~> .Map </k>
 Nested application:
 
 ```k
-rule <k> [[(lam x a (lam y b x)) (con 1 ! 0)] (con 2 ! 123)] => (con 1 ! 0) </k>
+rule <k> [[(lam x [(con integer) (con 1)] (lam y [(con integer) (con 2)] x)) (con 1 ! 0)] (con 2 ! 123)]
+      => (con 1 ! 0)
+     </k>
      <env> .Map => .Map </env>
 ```
 

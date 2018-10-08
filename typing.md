@@ -200,9 +200,6 @@ Program version has no semantic meaning:
     syntax Type ::= ResultType
     syntax KVariable ::= Var
 
-    syntax Type ::= #type(Term) | #type(Type)
-    rule #type(TY:Type) => TY [anywhere]
-
     // builtin
     rule (con S ! _:Int) => [ (con integer) (con S:Size):Type ]:Type
     syntax TyVar ::= "s"
@@ -212,7 +209,8 @@ Program version has no semantic meaning:
     rule isResultType([(con integer) (con _)]:Type) => true
 
     // lam
-    rule (lam X:Var TY:Type TM:Term) => (fun TY #type(TM[TY/X]))
+    rule (lam X:Var TY:Type TM:Term) => TM[TY/X] ~> (fun TY #hole)
+    rule TY2:Type ~> (fun TY1 #hole) => (fun TY1 TY2)
 
     // app
     rule isResultType((fun TY1:ResultType TY2:ResultType)) => true

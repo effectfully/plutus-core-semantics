@@ -74,8 +74,9 @@ rule <k> [ (lam x [(con integer) (con 1)] x) (con 1 ! 1) ]
 Nested application:
 
 ```k
-rule <k> [[(lam x [(con integer) (con 2)] (lam y [(con integer) (con 1)] x)) (con 1 ! 0)] (con 2 ! 123)]
-      => (con 1 ! 0) </k>
+rule <k> [[(lam x [(con integer) (con 1)] (lam y [(con integer) (con 2)] x)) (con 1 ! 0)] (con 2 ! 123)]
+      => [ (con integer) (con 1) ]:Type
+     </k>
      <kind> .K => .K </kind>
 ```
 
